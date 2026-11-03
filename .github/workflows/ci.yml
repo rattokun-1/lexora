@@ -17,7 +17,7 @@ jobs:
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:
-          name: lexora-web
+          name: kotomia-web
           path: dist/
           include-hidden-files: true
   database:

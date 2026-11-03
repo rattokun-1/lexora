@@ -63,7 +63,7 @@ function create(host){
  function vector(){let x=input.x+(keys.has('d')||keys.has('ArrowRight')?1:0)-(keys.has('a')||keys.has('ArrowLeft')?1:0),y=input.y+(keys.has('s')||keys.has('ArrowDown')?1:0)-(keys.has('w')||keys.has('ArrowUp')?1:0);const length=Math.hypot(x,y);if(length>1){x/=length;y/=length;}return {x,y};}
  function tick(time){raf=0;if(!alive||!visible||document.hidden)return;if(time-lastTime<33){draw();return;}const dt=Math.min(.05,(time-lastTime)/1000||.033);lastTime=time;const v=vector(),walking=!preview&&!dialogOpen&&Math.hypot(v.x,v.y)>.05;
   if(walking){const dx=(v.x*.8525+v.y*.5227)*6*dt,dz=(-v.x*.5227+v.y*.8525)*6*dt;const p=A.move({x:hero.root.position.x,z:hero.root.position.z},dx,dz,saved.completed);const moved=Math.hypot(p.x-hero.root.position.x,p.z-hero.root.position.z)>.001;hero.root.position.x=p.x;hero.root.position.z=p.z;if(moved){hero.root.rotation.y=Math.atan2(dx,dz);walkTime+=dt*9;hero.legs[0].rotation.x=Math.sin(walkTime)*.4;hero.legs[1].rotation.x=-Math.sin(walkTime)*.4;}dirty=true;if(time-lastSave>8000){save();lastSave=time;}}
-  if(wasWalking&&!walking){hero.legs.forEach(leg=>leg.rotation.x=0);save();dirty=true;}wasWalking=walking;
+  if(wasWalking&&!walking){hero.legs.forEach(leg=>leg.rotation.x=0);save();dirty=true;}if(!preview&&wasWalking!==walking)window.dispatchEvent(new CustomEvent("kotomia-walking",{detail:walking}));wasWalking=walking;
   const goal=new THREE.Vector3(hero.root.position.x,0,hero.root.position.z),following=cameraTarget.distanceTo(goal)>.015;if(following){cameraTarget.lerp(goal,reduced?1:1-Math.exp(-dt*12));dirty=true;}
   if(dirty){updateLocation();render();dirty=false;}if(walking||following)draw();
  }

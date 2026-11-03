@@ -12,8 +12,10 @@ const month=Number(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',month:
 const season=month>=3&&month<=5?'春':month>=6&&month<=8?'夏':month>=9&&month<=11?'秋':'冬';
 for(const z of ZONES){if(z.id===4)continue;if(season==='秋'){z.tree=0xa97745;z.color=z.id===0?0xc6bb87:z.color;}if(season==='冬'){z.tree=0x9cb6ad;z.color=0xd4ded6;}if(season==='春'&&z.id===0)z.tree=0xc498b2;}
 const eventTitle=season==='秋'?'紅葉の散策':season==='冬'?'冬灯りの散策':season==='春'?'花の散策':'星涼みの散策';
+const EVENTS=[{id:'winter-lights',start:1215,end:108,title:'冬灯りの集い'},{id:'spring-blossoms',start:320,end:410,title:'花の便り'},{id:'summer-stars',start:701,end:815,title:'星涼みの夜'},{id:'autumn-leaves',start:1101,end:1120,title:'紅葉の便り'}];
+function eventAt(date=new Date()){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',month:'2-digit',day:'2-digit'}).formatToParts(date);const key=Number(parts.find(p=>p.type==='month').value)*100+Number(parts.find(p=>p.type==='day').value);return EVENTS.find(e=>e.start<=e.end?key>=e.start&&key<=e.end:key>=e.start||key<=e.end)||null;}
 const POINTS=[
- {id:'season-camp',kind:'camp',x:-14,z:25,zone:0,title:eventTitle,text:'季節の景色を眺めながら、今日の復習を進められます。通常の学習と同じ出題です。'},
+ {id:'season-camp',kind:'camp',x:-14,z:25,zone:0,title:eventAt()?.title||eventTitle,text:'季節の景色を眺めながら、今日の復習を進められます。通常の学習と同じ出題です。'},
  {id:'highland-camp',kind:'camp',x:0,z:-126,zone:5,title:'星渡りの野営地',text:'高原の灯を目印に、次の復習を確かめよう。'},
  {id:'wish-shrine',kind:'shrine',x:-6,z:18,zone:0,title:'星灯の祠',text:'旅で集めたコインを捧げると、贈り物が届きます。'},
  {id:'camp',kind:'camp',x:0,z:11,zone:0,title:'草原の焚き火',text:'ひと休みしながら、今のあなたに合う単語を確認できます。'},
@@ -42,5 +44,5 @@ function nearby(position,saved){const state=normalize(saved);return [...POINTS,.
 function complete(saved,id){const state=normalize(saved);if(!id||id===state.lastLessonId)return state;return {...state,completed:state.completed+1,lastLessonId:id};}
 function claim(saved,id){const state=normalize(saved),chest=CHESTS.find(c=>c.id===id);if(!chest||state.chests.includes(id)||state.completed<ZONES[chest.zone].need||Math.hypot(state.position.x-chest.x,state.position.z-chest.z)>3.4)return null;return {state:{...state,chests:[...state.chests,id]},coins:chest.coins};}
 function objective(saved){const state=normalize(saved),next=ZONES.find(z=>z.need>state.completed);return next?{title:next.id===1?'森のゲートを開く':next.name+'のゲートを開く',remaining:next.need-state.completed,zone:next.id}:{title:'開いた世界を探索する',remaining:0,zone:ZONES.length-1};}
-const api={season,eventTitle,ZONES,POINTS,CHESTS,OBSTACLES,zoneAt,highest,canWalk,normalize,move,nearby,complete,claim,objective};root.TangoAdventure=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+const api={season,eventTitle,EVENTS,eventAt,ZONES,POINTS,CHESTS,OBSTACLES,zoneAt,highest,canWalk,normalize,move,nearby,complete,claim,objective};root.TangoAdventure=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(globalThis);

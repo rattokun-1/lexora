@@ -67,10 +67,29 @@ body .account-backdrop .account-popup {
 }
 body .profile-editor,
 body .account-settings {
-  width: min(500px, 100%);
+  width: min(420px, calc(100vw - 32px)) !important;
+  justify-self: center;
   max-height: min(680px, calc(100dvh - 28px));
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+body .account-settings .modal-head {
+  margin-bottom: 18px;
+}
+body .account-settings .account-links {
+  width: 100%;
+}
+body .account-settings .account-links > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  white-space: normal;
+}
+body .account-settings .account-links > button > .icon {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 body .profile-editor form,
 body .account-settings .account-links {
@@ -114,6 +133,7 @@ body .account-settings summary {
   }
   body .profile-editor,
   body .account-settings {
+    width: calc(100vw - 24px) !important;
     padding: 22px;
   }
 }

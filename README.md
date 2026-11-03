@@ -1,53 +1,147 @@
-# コトミア（Kotomia）
+<div align="center">
 
-コトミアは、英単語学習を中心に「学習・旅・対戦」を短い操作で楽しめる静的Webアプリです。
+# コトミア · Kotomia
 
-- 本番: <https://tanq.dashcloudly.com/>
-- リポジトリ: <https://github.com/rattokun-1/lexora>
-- 現行リリース: `v1.4.3`
-- 先行リリース: `v1.4.3-pre`
+### 英単語の学びを、毎日の小さな冒険に。
 
-内部識別子、保存キー、Supabase RPC名などには互換性のため旧名称が残っています。表示名を除き、一括置換しないでください。
+**学習・旅・対戦をひとつにまとめた、英単語学習Webアプリ。**  
+自分のペースで復習し、3Dワールドを探索し、60秒のワードスプリントに挑戦できます。
 
-## 主な機能
+[![Release](https://img.shields.io/badge/release-v1.4.3-2563eb?style=flat-square)](https://github.com/rattokun-1/lexora/releases/tag/v1.4.3)
+[![Preview](https://img.shields.io/badge/preview-v1.4.3--pre-64748b?style=flat-square)](https://github.com/rattokun-1/lexora/releases/tag/v1.4.3-pre)
+![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-f7df1e?style=flat-square&logo=javascript&logoColor=111111)
+![Node.js](https://img.shields.io/badge/Node.js-22%2B-339933?style=flat-square&logo=nodedotjs&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Auth%20%26%20Sync-3ecf8e?style=flat-square&logo=supabase&logoColor=white)
 
-### 学習
+**[アプリを開く](https://tanq.dashcloudly.com/)** · **[はじめる](#quick-start)** · **[機能](#features)** · **[技術構成](#architecture)** · **[リリース](https://github.com/rattokun-1/lexora/releases)**
 
-- `new-word-data.js`の単語データを利用した英単語学習
-- 初回レベル診断（回答に応じた動的出題）
-- 習得状況と復習時期に応じた通常学習
-- FSRS-6による復習スケジューリング
-- 1回の学習で新しく導入する単語は最大5語
-- 意味選択、認識、スペルなどの段階的な復習
-- 学習進行、連続学習、単語の習得状態を端末に保存
+</div>
 
-### 旅
+---
 
-- 斜め上から見下ろす3Dワールド
-- 道以外も歩ける地形探索
+<a id="features"></a>
+## Features
+
+> 短い操作で、学ぶ・探索する・挑戦する。日々の英単語学習を続けやすくする4つの柱。
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📚 Learn · 学習
+
+初回のレベル診断から、習得度に合わせた復習まで。
+
+- `new-word-data.js` に基づく英単語学習
+- 回答に応じた動的な初回診断
+- **FSRS-6** による復習スケジューリング
+- 1回に導入する新出単語は最大5語
+- 意味選択・認識・スペルの段階的な復習
+- 進行状況・連続学習・習得状態を端末に保存
+
+</td>
+<td width="50%" valign="top">
+
+### 🗺️ Explore · 旅
+
+学習とともに広がる、見下ろし型の3Dワールド。
+
+- 道の外も歩ける地形探索
 - 学習進行に応じた地域・ゲートの解放
-- 会話、依頼、宝箱、季節イベント
-- 旅の中での任意のガチャ要素
-- 戦闘、ランキング、フレンド機能はありません
+- 会話・依頼・宝箱・季節イベント
+- 任意で楽しめるガチャ要素
+- 戦闘・ランキング・フレンド機能なし
 
-### ワードスプリント
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
-- ランダムマッチによる60秒の単語対戦
+### ⚡ Word Sprint · 対戦
+
+**60秒**のランダムマッチで、単語の正解数を競う。
+
 - 正解数で勝敗を決定
-- 開始時刻、終了時刻、採点はサーバー側で判定
-- ポーリング中も選択肢のフォーカスを保持
-- 退出時の待機キャンセル、時間切れ、通信エラーに対応
-- 自分側には設定済みプロフィール画像を表示
-- 対戦回答は通常の習得判定に反映しません
+- 開始・終了時刻と採点はサーバーで判定
+- ポーリング中も選択肢のフォーカスを維持
+- 待機キャンセル・時間切れ・通信エラーに対応
+- 設定済みプロフィール画像を自分側に表示
+- 対戦回答は通常の習得判定には反映しない
 
-### アカウント
+</td>
+<td width="50%" valign="top">
 
-- Supabase Authによるパスキー認証
-- 新規登録・復旧はメールOTP確認後にパスキーを登録
-- パスワード認証は使用しません
-- プロフィール画像、ニックネーム、設定を管理
-- ローカル学習データを認証済みユーザーのクラウドへ同期
-- ユーザーごとのデータはRLSで分離
+### 🔐 Account · アカウント
+
+パスキーで認証し、学習状態をクラウドに同期。
+
+- **Supabase Auth** のパスキー認証
+- 登録・復旧時はメールOTP確認後にパスキー登録
+- パスワード認証は不使用
+- プロフィール画像・ニックネーム・設定
+- ローカル学習データのクラウド同期
+- RLSによるユーザー単位のデータ分離
+
+</td>
+</tr>
+</table>
+
+<a id="quick-start"></a>
+## Quick Start
+
+**必要環境:** Node.js 22以上 / npm。クラウド機能を使う場合はSupabaseプロジェクトも必要です。
+
+```powershell
+npm install
+npm run check
+npm test
+npm run build
+```
+
+`npm run build` は公開用の静的ファイルを `dist/` にコピーします。
+
+ローカルで表示する場合は、プロジェクトのルートで静的HTTPサーバーを起動します。
+
+```powershell
+npx --yes serve .
+```
+
+> [!IMPORTANT]
+> `file://` から直接開くと、ES Module・認証・Service Workerが正常に動作しない場合があります。
+
+<a id="architecture"></a>
+## Architecture
+
+<div align="center">
+
+**Static frontend × Supabase backend**
+
+</div>
+
+```mermaid
+flowchart TD
+    U[利用者のブラウザー] --> A[静的Webアプリ<br/>HTML / CSS / Vanilla JS]
+    A --> L[学習とFSRS-6]
+    A --> W[3Dワールド]
+    A --> D[ワードスプリント]
+    A --> C[クラウド連携]
+    C --> AUTH[Supabase Auth<br/>パスキー・メールOTP]
+    C --> DB[(Supabase DB<br/>ユーザーデータ・学習イベント)]
+    D --> RPC[Supabase RPC<br/>対戦・採点]
+    RPC --> DB
+```
+
+**Technology**
+
+| レイヤー | 技術・役割 |
+| :-- | :-- |
+| Frontend | HTML / CSS / Vanilla JavaScript |
+| Learning | FSRS-6、ローカル進行管理 |
+| World | 3Dマップの読み込み・探索 |
+| Backend | Supabase Auth、Database、RPC、RLS |
+| Delivery | 静的ファイル、GitHub Actions、Release ZIP |
+
+---
 
 ## 学習データの収集とモデル
 
@@ -94,7 +188,7 @@
 
 SQLは[`supabase/migrations/`](supabase/migrations/)を日付順に適用します。静的配布ZIPにはSQLやテストを含めません。
 
-## 開発環境
+## 開発環境・検証手順
 
 ### 必要環境
 

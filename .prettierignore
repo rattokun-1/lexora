@@ -1,0 +1,6 @@
+.git
+dist
+releases
+src/vendor
+src/world-map.bundle.js
+new-word-data.js

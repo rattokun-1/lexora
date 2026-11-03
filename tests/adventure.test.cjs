@@ -1,8 +1,116 @@
-const test=require('node:test'),assert=require('node:assert/strict'),A=require('../src/adventure-data.js'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-test('learning gradually opens connected regions without requiring correct answers',()=>{let s=A.normalize(null);assert.equal(A.highest(s.completed),0);assert(!A.canWalk(0,-14,0));s=A.complete(s,'one');assert.equal(A.highest(s.completed),1);assert(A.canWalk(0,-14,s.completed));assert(!A.canWalk(0,-38,s.completed));s=A.complete(A.complete(s,'two'),'three');assert.equal(A.highest(s.completed),2);assert(A.canWalk(0,-38,s.completed));assert.equal(A.complete(s,'three').completed,3);});
-test('movement cannot tunnel through a locked gate or leave the terrain',()=>{const p=A.move({x:0,z:14},0,-100,0);assert(p.z>=-11);assert(A.canWalk(p.x,p.z,0));const q=A.move({x:0,z:14},100,0,0);assert(q.x<48);assert(A.canWalk(q.x,q.z,0));assert(!A.canWalk(0,-12,0));assert(!A.canWalk(10,-12,8));});
-test('saved positions and chest ids are validated',()=>{const s=A.normalize({completed:-8,position:{x:NaN,z:-100},chests:['grass-chest','grass-chest','fake']});assert.equal(s.completed,0);assert.deepEqual(s.position,{x:0,z:14});assert.deepEqual(s.chests,['grass-chest']);assert.equal(A.normalize({completed:0,position:{x:0,z:-90}}).position.z,14);});
-test('all conversation and treasure points have reachable approach positions',()=>{for(const point of [...A.POINTS,...A.CHESTS]){const approaches=Array.from({length:16},(_,i)=>({x:point.x+Math.cos(i*Math.PI/8)*2.5,z:point.z+Math.sin(i*Math.PI/8)*2.5})).filter(p=>A.canWalk(p.x,p.z,Math.max(...A.ZONES.map(z=>z.need))));assert(approaches.length,point.id+' needs an approach');}});
-test('treasure is optional, proximity-gated, and cannot be claimed twice',()=>{let s=A.normalize(null);assert.equal(A.claim(s,'grass-chest'),null);s.position={x:-8,z:9};const gift=A.claim(s,'grass-chest');assert.equal(gift.coins,15);assert.equal(A.claim(gift.state,'grass-chest'),null);assert.equal(A.claim(s,'snow-chest'),null);assert.equal(A.nearby(s.position,s).kind,'chest');});
-test('lesson completion advances exploration and returns to the world; skipped lessons do not',()=>{const app=fs.readFileSync(path.join(__dirname,'../src/app.js'),'utf8'),code=app.slice(app.indexOf('function finishLearning()'),app.indexOf('function learnAction('));function run(answered){const ctx={state:{fever:false,completedLessons:[],lessonProgress:{},adventure:A.normalize(null),daily:{lessons:0},ownedBadges:['first-step'],lastStudyDate:'today',lastLessonStampDate:'today',ui:{},streak:0},learning:{id:'daily',sessionId:'session',adventureSource:'camp',initialIds:['a','b'],answeredIds:answered,lessonIndex:-2},vocab:[{id:'a'},{id:'b'}],TangoAdventure:A,TangoProgress:{clear:()=>[]},courseRoute:()=>[],dismissSwipeIntro:()=>{},clearAuto:()=>{},clearFever:()=>{},todayKey:()=>'today',toast:()=>{},persist:()=>{},renderApp:()=>{}};vm.createContext(ctx);vm.runInContext(code,ctx);ctx.finishLearning();return ctx;}const done=run(['a','b']);assert.equal(done.state.adventure.completed,1);assert.equal(done.state.ui.view,'path');assert.equal(run(['a']).state.adventure.completed,0);});
-test('wide meadows support off-trail exploration while gates control region crossings',()=>{assert(A.canWalk(30,30,0));assert(A.canWalk(-30,30,0));assert(!A.canWalk(0,-12,0));assert(A.canWalk(0,-12,1));assert(!A.canWalk(20,-12,1));});
+const test = require("node:test"),
+  assert = require("node:assert/strict"),
+  A = require("../src/adventure-data.js"),
+  fs = require("node:fs"),
+  vm = require("node:vm"),
+  path = require("node:path");
+test("learning gradually opens connected regions without requiring correct answers", () => {
+  let s = A.normalize(null);
+  assert.equal(A.highest(s.completed), 0);
+  assert(!A.canWalk(0, -14, 0));
+  s = A.complete(s, "one");
+  assert.equal(A.highest(s.completed), 1);
+  assert(A.canWalk(0, -14, s.completed));
+  assert(!A.canWalk(0, -38, s.completed));
+  s = A.complete(A.complete(s, "two"), "three");
+  assert.equal(A.highest(s.completed), 2);
+  assert(A.canWalk(0, -38, s.completed));
+  assert.equal(A.complete(s, "three").completed, 3);
+});
+test("movement cannot tunnel through a locked gate or leave the terrain", () => {
+  const p = A.move({ x: 0, z: 14 }, 0, -100, 0);
+  assert(p.z >= -11);
+  assert(A.canWalk(p.x, p.z, 0));
+  const q = A.move({ x: 0, z: 14 }, 100, 0, 0);
+  assert(q.x < 48);
+  assert(A.canWalk(q.x, q.z, 0));
+  assert(!A.canWalk(0, -12, 0));
+  assert(!A.canWalk(10, -12, 8));
+});
+test("saved positions and chest ids are validated", () => {
+  const s = A.normalize({
+    completed: -8,
+    position: { x: NaN, z: -100 },
+    chests: ["grass-chest", "grass-chest", "fake"],
+  });
+  assert.equal(s.completed, 0);
+  assert.deepEqual(s.position, { x: 0, z: 14 });
+  assert.deepEqual(s.chests, ["grass-chest"]);
+  assert.equal(A.normalize({ completed: 0, position: { x: 0, z: -90 } }).position.z, 14);
+});
+test("all conversation and treasure points have reachable approach positions", () => {
+  for (const point of [...A.POINTS, ...A.CHESTS]) {
+    const approaches = Array.from({ length: 16 }, (_, i) => ({
+      x: point.x + Math.cos((i * Math.PI) / 8) * 2.5,
+      z: point.z + Math.sin((i * Math.PI) / 8) * 2.5,
+    })).filter((p) => A.canWalk(p.x, p.z, Math.max(...A.ZONES.map((z) => z.need))));
+    assert(approaches.length, point.id + " needs an approach");
+  }
+});
+test("treasure is optional, proximity-gated, and cannot be claimed twice", () => {
+  let s = A.normalize(null);
+  assert.equal(A.claim(s, "grass-chest"), null);
+  s.position = { x: -8, z: 9 };
+  const gift = A.claim(s, "grass-chest");
+  assert.equal(gift.coins, 15);
+  assert.equal(A.claim(gift.state, "grass-chest"), null);
+  assert.equal(A.claim(s, "snow-chest"), null);
+  assert.equal(A.nearby(s.position, s).kind, "chest");
+});
+test("lesson completion advances exploration and returns to the world; skipped lessons do not", () => {
+  const app = fs.readFileSync(path.join(__dirname, "../src/app.js"), "utf8"),
+    code = app.slice(
+      app.indexOf("function finishLearning()"),
+      app.indexOf("function learnAction("),
+    );
+  function run(answered) {
+    const ctx = {
+      state: {
+        fever: false,
+        completedLessons: [],
+        lessonProgress: {},
+        adventure: A.normalize(null),
+        daily: { lessons: 0 },
+        ownedBadges: ["first-step"],
+        lastStudyDate: "today",
+        lastLessonStampDate: "today",
+        ui: {},
+        streak: 0,
+      },
+      learning: {
+        id: "daily",
+        sessionId: "session",
+        adventureSource: "camp",
+        initialIds: ["a", "b"],
+        answeredIds: answered,
+        lessonIndex: -2,
+      },
+      vocab: [{ id: "a" }, { id: "b" }],
+      TangoAdventure: A,
+      TangoProgress: { clear: () => [] },
+      courseRoute: () => [],
+      dismissSwipeIntro: () => {},
+      clearAuto: () => {},
+      clearFever: () => {},
+      todayKey: () => "today",
+      toast: () => {},
+      persist: () => {},
+      renderApp: () => {},
+    };
+    vm.createContext(ctx);
+    vm.runInContext(code, ctx);
+    ctx.finishLearning();
+    return ctx;
+  }
+  const done = run(["a", "b"]);
+  assert.equal(done.state.adventure.completed, 1);
+  assert.equal(done.state.ui.view, "path");
+  assert.equal(run(["a"]).state.adventure.completed, 0);
+});
+test("wide meadows support off-trail exploration while gates control region crossings", () => {
+  assert(A.canWalk(30, 30, 0));
+  assert(A.canWalk(-30, 30, 0));
+  assert(!A.canWalk(0, -12, 0));
+  assert(A.canWalk(0, -12, 1));
+  assert(!A.canWalk(20, -12, 1));
+});

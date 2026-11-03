@@ -1,6 +1,7 @@
 /* Kotomia: a quiet learning surface and a lively, readable sports arena. */
 body[data-color-mode="light"],body{--bg:#f7f5ec;--surface:#fffef9;--surface-solid:#fffef9;--surface-raised:#e9f1eb;--glass:#fffef9d9;--ink:#203f3c;--ink-strong:#153c37;--muted:#62736d;--line:#dce4da;--line-strong:#bdcfc3;--quest-accent:#176a5c;--quest-shadow:#104d43;--accent:#176a5c;--primary:#176a5c;--gold:#ad8134;--rival:#b94b3e;background:var(--bg);color:var(--ink)}
 body[data-color-mode="dark"]{--bg:#142724;--surface:#203631;--surface-solid:#203631;--surface-raised:#2b4941;--glass:#203631e8;--ink:#edf3e9;--ink-strong:#fffef9;--muted:#b4c7bd;--line:#385348;--line-strong:#567568;--quest-accent:#77d1b6;--quest-shadow:#0c3028;--accent:#77d1b6;--primary:#77d1b6;--gold:#dfbd77;--rival:#ffb1a0}
+body[data-color-mode]{--page:var(--bg);--page-deep:var(--bg);--violet:var(--quest-accent);--violet-bright:var(--quest-accent);--aqua:var(--quest-accent);--rose:var(--rival);--amber:var(--gold);--good:var(--quest-accent);--nav-shadow:0 10px 28px #173e3618;--shadow:0 10px 30px #173e3614}
 body{background:radial-gradient(ellipse at 85% 5%,#bdcec233,transparent 45%),var(--bg)!important}body .primary-btn{background:var(--quest-accent);color:#fff;box-shadow:0 3px 0 var(--quest-shadow)}body[data-color-mode="dark"] .primary-btn{color:#102e26}body button{touch-action:manipulation}body :focus-visible{outline:3px solid var(--gold);outline-offset:4px}
 body .top-glass-chrome,body .app-shell .bottom-nav{background:var(--glass)!important;border:1px solid var(--line-strong)!important;box-shadow:0 8px 30px #173e3614,inset 0 1px #ffffff80!important;backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);transition:width .25s ease,padding .25s ease,border-radius .25s ease,background .25s ease}
 body .top-glass-chrome{width:min(500px,calc(100% - 24px));border-radius:25px;padding:5px 8px;min-height:56px;overflow:visible}body .app-shell .bottom-nav{width:min(460px,calc(100vw - 24px))!important;height:auto!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;border-radius:25px!important;padding:6px!important;gap:4px}
@@ -12,6 +13,115 @@ body .screen.duel-screen{max-width:780px;padding-top:110px}.duel-heading{text-al
 .sprint-scoreboard{display:grid;grid-template-columns:1fr 100px 1fr;align-items:center;text-align:center}.sprint-player{color:var(--quest-accent)}.sprint-player.rival{color:var(--rival)}.sprint-player small{display:block;font-size:12px;font-weight:700}.sprint-player strong{display:block;font:800 50px Manrope,sans-serif;font-variant-numeric:tabular-nums}.sprint-timer{display:grid;place-items:center;border:2px solid var(--line);border-radius:50%;width:86px;height:86px;margin:auto}.sprint-timer span{font:800 30px Manrope,sans-serif;font-variant-numeric:tabular-nums}.sprint-timer small{font-size:10px;margin-top:-12px;color:var(--muted)}.sprint-timer.urgent{color:var(--rival);border-color:var(--rival)}.sprint-balance{height:7px;border-radius:8px;background:var(--rival);overflow:hidden;margin:22px 0}.sprint-balance i{display:block;height:100%;background:var(--quest-accent);transition:width .25s}.sprint-question h2{font-size:clamp(32px,7vw,52px);text-align:center;margin:24px 0 32px;overflow-wrap:anywhere}.sprint-feedback{text-align:center;min-height:22px;font-size:13px;color:var(--quest-accent)}.duel-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.sprint-answer{display:flex;align-items:center;gap:12px;min-height:76px;padding:16px;text-align:left;border:1px solid var(--line-strong);border-radius:16px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:700;overflow-wrap:anywhere}.sprint-answer>span{display:grid;place-items:center;flex-shrink:0;width:27px;height:27px;background:var(--surface-raised);border-radius:8px;font-size:11px;color:var(--quest-accent)}.sprint-answer:hover:not(:disabled){border-color:var(--quest-accent);background:var(--surface-raised)}.sprint-answer:disabled{opacity:.65}.sprint-result{text-align:center;padding:20px 0}.result-medal{font-size:50px;color:var(--gold)}.sprint-result h2{font-size:30px}.sprint-result button{display:block;width:100%;margin-top:14px}.sprint-countdown{text-align:center;padding:60px 0}.sprint-countdown strong{display:block;font:800 90px Manrope,sans-serif;color:var(--quest-accent)}.duel-error{padding:16px;border:1px solid var(--rival);border-radius:14px;color:var(--rival);font-size:13px;line-height:1.7}body.duel-active .top-glass-chrome,body.duel-active .bottom-nav{display:none!important}body.duel-active .duel-heading{display:none}body.duel-active .screen.duel-screen{padding-top:24px;padding-bottom:24px}body.duel-active .sprint-arena{min-height:calc(100dvh - 48px)}
 @media(max-width:600px){.home-launch{flex-direction:column;align-items:stretch;padding:23px}.home-launch>.primary-btn{width:100%;min-height:60px}.home-duel-link{padding:20px;gap:12px}.home-duel-link>span:last-child{font-size:12px}.match-arena,.sprint-arena{padding:20px 16px;border-radius:23px}.match-players{gap:9px}.match-player{padding:23px 7px}.match-player strong{font-size:12px}.runner-mark{width:60px;height:60px}.duel-options{grid-template-columns:1fr;gap:10px}.sprint-answer{min-height:62px}.sprint-question h2{margin:16px 0 24px}.sprint-scoreboard{grid-template-columns:1fr 88px 1fr}.sprint-player strong{font-size:42px}.sprint-timer{width:76px;height:76px}.account-backdrop .account-popup{right:12px}body .screen.duel-screen{padding-left:14px;padding-right:14px}.sprint-result h2{font-size:25px}}
 @media(prefers-reduced-motion:reduce){body *,body *::before,body *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Final visual pass: one Kotomia surface, lighter compositing, and touch-friendly account controls. */
+body .app-shell.learn-screen,
+body main.screen.learn-screen {
+  background: var(--bg) !important;
+}
+body .app-shell.learn-screen {
+  isolation: auto;
+}
+body .app-shell.learn-screen .word-card,
+body .app-shell.learn-screen .quick-test {
+  background: var(--surface-solid);
+  border-color: var(--line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 12px 32px #173e3614;
+  contain: layout paint;
+  will-change: transform, opacity;
+}
+body .app-shell.learn-screen .learn-answer {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+body .app-shell.learn-screen .swipe-intro {
+  background: #153c37e8;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+body .app-shell .bottom-nav .nav-item[data-start="daily"] {
+  background: var(--quest-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 3px 0 var(--quest-shadow) !important;
+}
+body .modal-backdrop {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+body .account-backdrop {
+  overflow-y: auto;
+  padding: max(14px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom)) !important;
+}
+body .account-backdrop .account-popup {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: min(390px, 100%) !important;
+  max-height: min(620px, calc(100dvh - 28px));
+  margin: 0 0 0 auto;
+  overflow-y: auto;
+}
+body .profile-editor,
+body .account-settings {
+  width: min(500px, 100%);
+  max-height: min(680px, calc(100dvh - 28px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+body .profile-editor form,
+body .account-settings .account-links {
+  display: grid;
+  gap: 12px;
+}
+body .editor-photo-picker {
+  min-width: 100px;
+  min-height: 100px;
+  border-radius: 20px;
+  padding: 10px;
+  background: var(--surface-raised);
+}
+body .profile-editor .field {
+  margin: 4px 0;
+}
+body .profile-editor-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+body .profile-editor-footer button,
+body .account-settings .account-links > button {
+  width: 100%;
+  min-height: 52px;
+  margin: 0;
+}
+body .account-settings details {
+  margin-top: 4px;
+}
+body .account-settings summary {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 480px) {
+  body .account-backdrop .account-popup {
+    width: 100% !important;
+    margin: 0;
+  }
+  body .profile-editor,
+  body .account-settings {
+    padding: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body .app-shell.learn-screen .word-card {
+    will-change: auto;
+  }
+}
 @supports not(backdrop-filter:blur(1px)){body .top-glass-chrome,body .app-shell .bottom-nav{background:var(--surface-solid)!important}}
 html{background:var(--bg,#f7f5ec)}body .app-shell:not(.learn-screen){background:radial-gradient(ellipse at 85% 0,#bdcec233,transparent 48%),var(--bg)!important}body .app-shell .bottom-nav .nav-item.nav-study{background:var(--quest-accent)!important;color:#fff!important}body[data-color-mode="dark"] .app-shell .bottom-nav .nav-item.nav-study{color:#102e26!important}body #duel-content{padding:0;border:0;background:none;border-radius:0;margin-top:0}body #duel-content h2{margin:24px 0 30px}body .duel-options .sprint-answer{min-height:70px}body .learn-screen .word-card{background:var(--surface);color:var(--ink)}
 body .app-shell .bottom-nav .nav-item .icon{color:inherit!important}body .daily-ring-fill{stroke:var(--quest-accent)}body .quest-meter i,body .progress-bar{background:var(--quest-accent)}

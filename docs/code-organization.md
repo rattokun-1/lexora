@@ -27,3 +27,13 @@
 - モデルイベントにはプロフィール情報を追加しない
 - `src/vendor/`と`world-map.bundle.js`は生成物・外部コードのため手動整理しない
 - 整理後は`npm run check`、`npm test`、`npm run build`を実行する
+
+## 整形
+
+Prettierの設定はリポジトリ直下の`.prettierrc.json`にあります。対象ファイルを確認してから、次のコマンドで自作コードを整形します。
+
+```powershell
+npx --yes prettier@3.6.2 --write .
+```
+
+`.prettierignore`にある外部コード、生成物、巨大データは整形対象にしません。

@@ -42,7 +42,9 @@
 
   async function recordReviews(events) {
     const connection = await required();
-    const { data, error } = await connection.rpc("lexora_record_reviews", { events });
+    const { data, error } = await connection.rpc("lexora_record_reviews", {
+      events,
+    });
     if (error) throw error;
     return data;
   }

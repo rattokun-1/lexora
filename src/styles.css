@@ -1,4 +1,14 @@
-/* TANGO visual system — deliberately framework-free */
+/*
+ * Base visual system
+ * ------------------
+ * 1. Theme tokens
+ * 2. Reset and shared controls
+ * 3. App shell and navigation
+ * 4. Screen-specific layouts
+ *
+ * Kotomia overrides live in kotomia.css, which is loaded last.
+ */
+/* Legacy TANGO tokens are kept for saved themes and compatibility. */
 :root {
   --ink: #252c3b;
   --ink-strong: #182132;

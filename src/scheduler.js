@@ -2,30 +2,65 @@
    Defaults are not individually fitted weights. Legacy due dates are preserved. */
 (function (root) {
   "use strict";
-  const DAY = 86400000, MIN_STABILITY = 10 / 1440, MAX_STABILITY = 365;
+
+  const DAY = 86400000;
+  const MIN_STABILITY = 10 / 1440;
+  const MAX_STABILITY = 365;
   const TARGET = 0.9;
   const lib = typeof module !== 'undefined' && module.exports ? require('./vendor/ts-fsrs-5.2.3.js') : root.FSRS;
   const engine = lib.fsrs({request_retention:TARGET,maximum_interval:365,enable_fuzz:false});
-  function selectedEngine(){
-    const m=root.LexoraModel,p=m?.parameters;
-    if(!m?.eligible||m.kind!=='logistic-calibration-v1'||!Number.isFinite(p?.intercept)||!Number.isFinite(p?.slope)||p.slope<=0||p.slope>5||Math.abs(p.intercept)>5)return engine;
-    const target=1/(1+Math.exp(-(Math.log(TARGET/(1-TARGET))-p.intercept)/p.slope));
-    return lib.fsrs({request_retention:Math.max(.7,Math.min(.99,target)),maximum_interval:365,enable_fuzz:false});
+  function selectedEngine() {
+    const model = root.LexoraModel;
+    const parameters = model?.parameters;
+    const valid =
+      model?.eligible &&
+      model.kind === "logistic-calibration-v1" &&
+      Number.isFinite(parameters?.intercept) &&
+      Number.isFinite(parameters?.slope) &&
+      parameters.slope > 0 &&
+      parameters.slope <= 5 &&
+      Math.abs(parameters.intercept) <= 5;
+    if (!valid) return engine;
+
+    const target = 1 / (
+      1 +
+      Math.exp(
+        -(
+          Math.log(TARGET / (1 - TARGET)) - parameters.intercept
+        ) / parameters.slope,
+      )
+    );
+    return lib.fsrs({
+      request_retention: Math.max(0.7, Math.min(0.99, target)),
+      maximum_interval: 365,
+      enable_fuzz: false,
+    });
   }
-  const clamp = (x, min, max) => Math.max(min, Math.min(max, x));
-  const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const finite = (value, fallback = 0) =>
+    Number.isFinite(Number(value)) ? Number(value) : fallback;
 
   function memory(record, now = Date.now()) {
-    const d = record && typeof record === "object" ? record : {};
-    const lastSeen = Math.max(0, finite(d.lastSeen));
+    const saved = record && typeof record === "object" ? record : {};
+    const lastSeen = Math.max(0, finite(saved.lastSeen));
     if (!lastSeen) return { isNew: true, retention: null, due: false, dueAt: null, stability: 1, difficulty: 5, elapsed: 0 };
     const elapsed = Math.max(0, now - lastSeen) / DAY;
     // Legacy data has intervalDays/nextReviewAt, but no stability. Preserve its scheduled date.
-    const oldInterval = Math.max(MIN_STABILITY, finite(d.intervalDays, 1));
-    const stability = clamp(finite(d.stabilityDays, oldInterval), MIN_STABILITY, MAX_STABILITY);
-    const difficulty = clamp(finite(d.difficulty, 5 + Math.min(3, finite(d.wrong) * 0.25)), 1, 10);
+    const oldInterval = Math.max(MIN_STABILITY, finite(saved.intervalDays, 1));
+    const stability = clamp(finite(saved.stabilityDays, oldInterval), MIN_STABILITY, MAX_STABILITY);
+    const difficulty = clamp(finite(saved.difficulty, 5 + Math.min(3, finite(saved.wrong) * 0.25)), 1, 10);
     const retention = clamp(engine.forgetting_curve(elapsed, stability), 0, 1);
-    const dueAt = d.schedulerVersion === 2 ? finite(d.nextReviewAt,lastSeen+stability*DAY) : d.diagnosticOnly && d.lastResult === 'forgot' ? finite(d.nextReviewAt,lastSeen) : d.schedulerVersion === 1 ? lastSeen + stability * DAY : Math.max(lastSeen, finite(d.nextReviewAt, lastSeen + stability * DAY));
+    const dueAt =
+      saved.schedulerVersion === 2
+        ? finite(saved.nextReviewAt, lastSeen + stability * DAY)
+        : saved.diagnosticOnly && saved.lastResult === "forgot"
+          ? finite(saved.nextReviewAt, lastSeen)
+          : saved.schedulerVersion === 1
+            ? lastSeen + stability * DAY
+            : Math.max(
+                lastSeen,
+                finite(saved.nextReviewAt, lastSeen + stability * DAY),
+              );
     return { isNew: false, retention, due: now >= dueAt, dueAt, stability, difficulty, elapsed };
   }
 

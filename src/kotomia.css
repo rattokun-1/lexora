@@ -1,4 +1,11 @@
-/* Kotomia: a quiet learning surface and a lively, readable sports arena. */
+/*
+ * Kotomia presentation layer
+ * --------------------------
+ * This file is intentionally loaded after the shared stylesheets.
+ * Keep product tokens here, then group overrides by surface:
+ * theme, chrome, home/account, duel, learning, and responsive rules.
+ */
+/* Product theme tokens */
 body[data-color-mode="light"],body{--bg:#f7f5ec;--surface:#fffef9;--surface-solid:#fffef9;--surface-raised:#e9f1eb;--glass:#fffef9d9;--ink:#203f3c;--ink-strong:#153c37;--muted:#62736d;--line:#dce4da;--line-strong:#bdcfc3;--quest-accent:#176a5c;--quest-shadow:#104d43;--accent:#176a5c;--primary:#176a5c;--gold:#ad8134;--rival:#b94b3e;background:var(--bg);color:var(--ink)}
 body[data-color-mode="dark"]{--bg:#142724;--surface:#203631;--surface-solid:#203631;--surface-raised:#2b4941;--glass:#203631e8;--ink:#edf3e9;--ink-strong:#fffef9;--muted:#b4c7bd;--line:#385348;--line-strong:#567568;--quest-accent:#77d1b6;--quest-shadow:#0c3028;--accent:#77d1b6;--primary:#77d1b6;--gold:#dfbd77;--rival:#ffb1a0}
 body[data-color-mode]{--page:var(--bg);--page-deep:var(--bg);--violet:var(--quest-accent);--violet-bright:var(--quest-accent);--aqua:var(--quest-accent);--rose:var(--rival);--amber:var(--gold);--good:var(--quest-accent);--nav-shadow:0 10px 28px #173e3618;--shadow:0 10px 30px #173e3614}

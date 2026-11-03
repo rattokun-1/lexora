@@ -10,6 +10,7 @@ let authBusy = false;
 let syncTimer = null;
 let applyingRemoteState = false;
 let syncStatus = { state: "idle", message: "" };
+let modalReturnFocus = null;
 const app = document.querySelector("#app");
 
 const icons = {
@@ -90,7 +91,7 @@ const badges = [
   { id: "night-owl", name: "NIGHT OWL", note: "夜のレッスン", kind: "achievement" },
   { id: "streak-maker", name: "STREAK MAKER", note: "14日連続記録", kind: "achievement" },
   { id: "polyglot", name: "POLYGLOT", note: "100語を学習", kind: "achievement" },
-  { id: "tango-legend", name: "TANGO LEGEND", note: "レベル20到達", kind: "achievement" }
+  { id: "tango-legend", name: "KOTOMIA LEGEND", note: "レベル20到達", kind: "achievement" }
 ];
 
 const themes = [
@@ -475,6 +476,19 @@ function renderApp() {
   if(state.ui.modal!=="edit-profile") profileDraft=null;
   clearAuto();
 
+  const previousModal = app.querySelector('[role="dialog"]');
+  if (state.ui.modal && !previousModal && !modalReturnFocus && app.contains(document.activeElement)) {
+    const active = document.activeElement;
+    const action = active.dataset?.action;
+    const nav = active.dataset?.nav;
+    if (action) modalReturnFocus = { selector: `[data-action="${action}"]` };
+    else if (nav) modalReturnFocus = { selector: `[data-nav="${nav}"]` };
+  }
+  if (!state.ui.modal && previousModal && modalReturnFocus) {
+    const selector = modalReturnFocus.selector;
+    modalReturnFocus = null;
+    setTimeout(() => document.querySelector(selector)?.focus({ preventScroll: true }), 0);
+  }
   const active = state.ui.view;
   document.body.dataset.theme = state.settings.dark ? "mono" : "light";
   document.body.dataset.colorMode = state.settings.dark ? "dark" : "light";
@@ -484,6 +498,10 @@ function renderApp() {
   document.body.dataset.screen=active;
   window.TangoWorld?.mount();
   if(active==='duel')LexoraDuel.mount();else window.LexoraDuel?.unmount();
+  if (state.ui.modal && !previousModal) {
+    const dialog = app.querySelector('[role="dialog"]');
+    dialog?.querySelector('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href]')?.focus({ preventScroll: true });
+  }
   persist();
 }
 

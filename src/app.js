@@ -107,7 +107,7 @@ const themes = [
 function avatarMarkup(id, label = "", image = "") { return `<span class="avatar avatar-custom avatar-photo" aria-label="${escapeHTML(label || "プロフィール写真")}"><img src="${escapeHTML(image || "./src/assets/profile-default.svg")}" alt="" /></span>`; }
 
 const todayKey = () => TangoProgress.dayKey();
-const cleanInitialName = (name) => /^(ミナト|みなと|minato)$/i.test(String(name || "").trim()) ? "TANGO USER" : (name || "TANGO USER");
+const cleanInitialName = (name) => /^(ミナト|みなと|minato|TANGO USER)$/i.test(String(name || "").trim()) ? "Lexora USER" : (name || "Lexora USER");
 function currentWeekKey(dateKey = todayKey()) { return TangoProgress.week(dateKey)[0]; }
 const defaultState = () => ({
   version: VERSION,
@@ -142,7 +142,7 @@ const defaultState = () => ({
   gacha: TangoGacha.normalize(null),
   weeklyChallenge: { week: currentWeekKey(), studyDays: [], claimed: false },
   studyGarden: { growth: 0, lastDay: null },
-  profile: { name: "TANGO USER", email: "", publicId: "", avatarId: "aqua", loggedIn: false },
+  profile: { name: "Lexora USER", email: "", publicId: "", avatarId: "aqua", loggedIn: false },
   settings: { dark: false, sound: true, lightUiMigration: true },
   ui: { view: "home", modal: null, authTab: "login", auto: false, socialTab: "global", selectedGroup: "", hubTab: "profile" },
   social: { friends: [], following: [], followers: [], groups: [], selectedProfile: null }
@@ -270,13 +270,13 @@ function persist({ sync = true } = {}) {
   writeStateCookie(state);
   if (sync && cloudUser && !applyingRemoteState) scheduleCloudSync();
 }
-function cloudPayload() { const copy=JSON.parse(JSON.stringify(state)); delete copy.ui; delete copy.social; delete copy.weeklyXP; copy.profile={...copy.profile,loggedIn:false}; delete copy.profile.email; delete copy.profile.publicId; return copy; }
+function cloudPayload() { const copy=JSON.parse(JSON.stringify(state)); delete copy.ui; delete copy.reviewEvents; delete copy.social; delete copy.weeklyXP; copy.profile={...copy.profile,loggedIn:false}; delete copy.profile.email; delete copy.profile.publicId; return copy; }
 function scheduleCloudSync(){clearTimeout(syncTimer);syncTimer=setTimeout(()=>pushCloudState(),900);}
-async function pushCloudState(){if(!cloudUser||applyingRemoteState)return false;const uid=cloudUser.id;syncStatus={state:'syncing',message:'同期中'};try{await TangoCloud.save(uid,cloudPayload());if(cloudUser?.id===uid)syncStatus={state:'synced',message:'同期済み'};return true;}catch{syncStatus={state:'local',message:'端末に保存中'};return false;}}
+async function pushCloudState(){setTimeout(flushReviews,0);if(!cloudUser||applyingRemoteState)return false;const uid=cloudUser.id;syncStatus={state:'syncing',message:'同期中'};try{await TangoCloud.save(uid,cloudPayload());if(cloudUser?.id===uid)syncStatus={state:'synced',message:'同期済み'};return true;}catch{syncStatus={state:'local',message:'端末に保存中'};return false;}}
 let enrollment={mode:'signup',stage:'profile',email:'',name:'',avatarImage:'',sentAt:0};
 let hydration=null,hydratedId=null;
-async function acceptCloudUser(user){if(!user){cloudUser=null;hydratedId=null;hydration=null;state.profile.loggedIn=false;renderApp();return;}if(hydratedId===user.id)return hydration;hydratedId=user.id;cloudUser=user;clearTimeout(syncTimer);hydration=(async()=>{applyingRemoteState=true;try{const saved=await TangoCloud.load(user.id);if(cloudUser?.id!==user.id)return;if(saved){const ui=state.ui;state=mergeState(saved);state.ui=ui;}else if(enrollment.mode==='signup'&&enrollment.stage!=='profile'){state.profile.name=enrollment.name||state.profile.name;state.profile.avatarImage=enrollment.avatarImage||'';}state.profile.loggedIn=true;writeStateCookie(state);state.ui.modal=enrollment.stage==='code'||enrollment.stage==='passkey'?'enrollment':null;}finally{applyingRemoteState=false;}renderApp();await pushCloudState();})();try{await hydration;}catch(error){hydratedId=null;syncStatus={state:'local',message:'同期を確認してください'};throw error;}}
-async function initCloud(){try{await TangoCloud.init();TangoCloud.onAuth(user=>acceptCloudUser(user).catch(()=>toast('クラウドの保存データを読み込めませんでした。再度お試しください。','bad')));}catch{syncStatus={state:'local',message:'端末に保存中'};}}
+async function acceptCloudUser(user){if(!user){cloudUser=null;hydratedId=null;hydration=null;state.profile.loggedIn=false;renderApp();return;}if(hydratedId===user.id)return hydration;hydratedId=user.id;cloudUser=user;clearTimeout(syncTimer);hydration=(async()=>{applyingRemoteState=true;try{const saved=await TangoCloud.load(user.id);if(cloudUser?.id!==user.id)return;if(saved){const ui=state.ui,pending=state.reviewEvents;state=mergeState(saved);state.ui=ui;state.reviewEvents=pending||[];}else if(enrollment.mode==='signup'&&enrollment.stage!=='profile'){state.profile.name=enrollment.name||state.profile.name;state.profile.avatarImage=enrollment.avatarImage||'';}state.profile.loggedIn=true;writeStateCookie(state);state.ui.modal=enrollment.stage==='code'||enrollment.stage==='passkey'?'enrollment':null;}finally{applyingRemoteState=false;}renderApp();await pushCloudState();})();try{await hydration;}catch(error){hydratedId=null;syncStatus={state:'local',message:'同期を確認してください'};throw error;}}
+async function initCloud(){try{await TangoCloud.init();TangoCloud.activeModel().then(m=>{window.LexoraModel=m;}).catch(()=>{});TangoCloud.onAuth(user=>acceptCloudUser(user).catch(()=>toast('クラウドの保存データを読み込めませんでした。再度お試しください。','bad')));}catch{syncStatus={state:'local',message:'端末に保存中'};}}
 function openEnrollment(mode){enrollment={mode,stage:'profile',email:'',name:mode==='signup'?state.profile.name:'',avatarImage:mode==='signup'?state.profile.avatarImage||'':'',sentAt:0};state.ui.modal='enrollment';renderApp();}
 async function enrollmentSubmit(form){if(authBusy)return;const data=new FormData(form);if(enrollment.stage==='profile'){enrollment.email=String(data.get('email')||'').trim();if(enrollment.mode==='signup')enrollment.name=String(data.get('nickname')||'').trim();if(!enrollment.email||enrollment.mode==='signup'&&!enrollment.name)return;}authBusy=true;renderApp();try{if(enrollment.stage==='profile'){await TangoCloud.sendEmailCode(enrollment.email,enrollment.mode==='signup');enrollment.stage='code';enrollment.sentAt=Date.now();}else if(enrollment.stage==='code'){const result=await TangoCloud.verifyEmailCode(enrollment.email,String(data.get('code')||'').trim());await acceptCloudUser(result.user);enrollment.stage='passkey';}state.ui.modal='enrollment';}catch(error){toast(error.message||'メール確認ができませんでした。','bad');}finally{authBusy=false;renderApp();}}
 function renderEnrollment(){
@@ -284,7 +284,7 @@ function renderEnrollment(){
  const labels=[recover?'メール':'プロフィール','メール確認','パスキー'];
  const titles=[recover?'登録メールを確認':'プロフィールを設定','メールを確認','パスキーを作成'];
  const busy=authBusy?'<span class="enroll-spinner" aria-hidden="true"></span>':'';
- return `<div class="modal-backdrop enrollment-backdrop"><section class="modal enrollment-modal" data-enroll-stage="${stage}" aria-busy="${authBusy}" role="dialog" aria-modal="true" aria-labelledby="enroll-title"><header class="enroll-header"><span class="enroll-kicker">${recover?'アカウントの復旧':'アカウントの作成'}</span><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></header><div class="enroll-progress" aria-label="登録の進捗"><div class="enroll-progress-meta"><span>STEP <b>0${step}</b></span><span>0${step} / 03</span></div><div class="enroll-progress-track" role="progressbar" aria-label="${labels[step-1]}" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${step}" aria-valuetext="3段階中${step}段階目：${labels[step-1]}"><i style="--enroll-progress:${step/3*100}%"></i></div><ol class="enroll-step-labels">${labels.map((label,i)=>`<li class="${i+1===step?'current':i+1<step?'done':''}" ${i+1===step?'aria-current="step"':''}><span>${i+1<step?'✓':i+1}</span>${label}</li>`).join('')}</ol></div><div class="enroll-content"><h2 id="enroll-title">${titles[step-1]}</h2><p class="enroll-intro">${step===1?(recover?'確認後、新しいパスキーを登録できます。':'旅で使う名前と、復旧用のメールを設定します。'):step===2?'メールに届いた確認コードを入力してください。':'顔認証・指紋認証・端末のPINで登録できます。'}</p>${stage==='passkey'?`<div class="enroll-passkey-art" aria-hidden="true"><div>${icons.user}</div><span>${icons.check}</span></div><div class="enroll-confirmed">${icons.check}メールの確認ができました</div><button class="primary-btn enroll-submit" data-action="passkey-register" ${authBusy?'disabled':''}>${busy}${authBusy?'登録中…':'パスキーを作成する'}</button><p class="enroll-footnote">パスワードを覚える必要はありません。</p>`:`<form id="enrollment-form">${stage==='profile'?`${!recover?`<label class="enroll-avatar">${avatarMarkup('',enrollment.name,enrollment.avatarImage)}<span class="enroll-photo-copy"><strong>プロフィール写真</strong><small>写真を選ぶ · 未選択なら標準画像</small></span><span class="enroll-photo-action">${icons.camera}</span><input id="enroll-avatar" class="enroll-file-input" type="file" accept="image/png,image/jpeg,image/webp" aria-label="プロフィール写真を選ぶ" /></label><label>ニックネーム<input name="nickname" autocomplete="nickname" maxlength="20" required placeholder="旅で使う名前" value="${escapeHTML(enrollment.name)}" /></label>`:''}<label>復旧用メールアドレス<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="${escapeHTML(enrollment.email)}" /></label><p class="enroll-field-note">${recover?'アカウントに登録したメールアドレスを入力してください。':'パスキーを紛失したときの本人確認に使います。'}</p>`:`<div class="enroll-email-destination">${icons.mail}<span>${escapeHTML(enrollment.email)}</span></div><label>確認コード<input class="enroll-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required placeholder="確認コード" /></label>`}<button class="primary-btn enroll-submit" type="submit" ${authBusy?'disabled':''}>${busy}${authBusy?'処理中…':stage==='profile'?'確認コードを送る':'メールを確認する'}${authBusy?'':icons.arrow}</button>${stage==='code'?'<button class="text-link enroll-resend" type="button" data-action="enroll-resend">コードを再送信</button>':'<p class="enroll-footnote">パスワードは作成しません。</p>'}</form>`}</div></section></div>`;
+ return `<div class="modal-backdrop enrollment-backdrop"><section class="modal enrollment-modal" data-enroll-stage="${stage}" aria-busy="${authBusy}" role="dialog" aria-modal="true" aria-labelledby="enroll-title"><header class="enroll-header"><span class="enroll-kicker">${recover?'アカウントの復旧':'アカウントの作成'}</span><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></header><div class="enroll-progress" aria-label="登録の進捗"><div class="enroll-progress-meta"><span>STEP <b>0${step}</b></span><span>0${step} / 03</span></div><div class="enroll-progress-track" role="progressbar" aria-label="${labels[step-1]}" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${step}" aria-valuetext="3段階中${step}段階目：${labels[step-1]}"><i style="--enroll-progress:${step/3*100}%"></i></div><ol class="enroll-step-labels">${labels.map((label,i)=>`<li class="${i+1===step?'current':i+1<step?'done':''}" ${i+1===step?'aria-current="step"':''}><span>${i+1<step?'✓':i+1}</span>${label}</li>`).join('')}</ol></div><div class="enroll-content"><h2 id="enroll-title">${titles[step-1]}</h2><p class="enroll-intro">${step===1?(recover?'確認後、新しいパスキーを登録できます。':'旅で使う名前と、復旧用のメールを設定します。'):step===2?'メールに届いた確認コードを入力してください。':'顔認証・指紋認証・端末のPINで登録できます。'}</p>${stage==='passkey'?`<div class="enroll-passkey-art" aria-hidden="true"><div>${icons.user}</div><span>${icons.check}</span></div><div class="enroll-confirmed">${icons.check}メールの確認ができました</div><button class="primary-btn enroll-submit" data-action="passkey-register" ${authBusy?'disabled':''}>${busy}${authBusy?'登録中…':'パスキーを作成する'}</button><p class="enroll-footnote">パスワードを覚える必要はありません。</p>`:`<form id="enrollment-form">${stage==='profile'?`${!recover?`<label class="enroll-avatar">${avatarMarkup('',enrollment.name,enrollment.avatarImage)}<span class="enroll-photo-copy"><strong>プロフィール写真</strong><small>写真を選ぶ · 未選択なら標準画像</small></span><span class="enroll-photo-action">${icons.camera}</span><input id="enroll-avatar" class="enroll-file-input" type="file" accept="image/png,image/jpeg,image/webp" aria-label="プロフィール写真を選ぶ" /></label><label>ニックネーム<input name="nickname" autocomplete="nickname" maxlength="20" required placeholder="旅で使う名前" value="${escapeHTML(enrollment.name)}" /></label>`:''}<label>復旧用メールアドレス<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="${escapeHTML(enrollment.email)}" /></label><p class="enroll-field-note">${recover?'アカウントに登録したメールアドレスを入力してください。':'パスキーを紛失したときの本人確認に使います。'}</p>`:`<div class="enroll-email-destination">${icons.mail}<span>${escapeHTML(enrollment.email)}</span></div><label>確認コード<input class="enroll-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required placeholder="確認コード" /></label>`}<button class="primary-btn enroll-submit" type="submit" ${authBusy?'disabled':''}>${busy}${authBusy?'処理中…':stage==='profile'?'確認コードを送る':'メールを確認する'}${authBusy?'':icons.arrow}</button>${stage==='code'?'<button class="text-link enroll-resend" type="button" data-action="enroll-resend">コードを再送信</button>':'<p class="enroll-footnote">パスワードは作成しません。Lexoraは出題改善のため学習履歴を収集します。<a href="privacy.html" target="_blank" rel="noopener">データの取り扱い</a></p>'}</form>`}</div></section></div>`;
 }
 async function passkeyAction(register=false){if(authBusy)return;authBusy=true;renderApp();try{if(register){await TangoCloud.registerPasskey();state.profile.passkeyReady=true;await pushCloudState();enrollment.stage='done';}else{const result=await TangoCloud.signIn();await acceptCloudUser(result.user);}state.ui.modal=register?'account':null;toast(register?'パスキーを登録しました。':'ログインしました。','good');}catch(error){toast(error.name==='NotAllowedError'?'認証をキャンセルしました。':error.message||'認証できませんでした。','bad');}finally{authBusy=false;renderApp();}}
 function resetDailyIfNeeded() {
@@ -331,9 +331,9 @@ function tone(type = "good") {
   } catch { /* audio is optional */ }
 }
 function logoHtml() { return '<img class="tango-logo-mark" src="src/assets/tango-mark.svg" alt="" width="44" height="44" />'; }
-function brandHtml() { return `<a class="brand tango-brand" href="#" data-nav="home" aria-label="TANGO ホーム">${logoHtml()}<span>TANGO</span></a>`; }
+function brandHtml() { return `<a class="brand tango-brand" href="#" data-nav="home" aria-label="Lexora ホーム">${logoHtml()}<span>Lexora</span></a>`; }
 function navHtml(active) {
-  const items = [["home","ホーム","home"],["path","旅","map"],["study","学習","learn"]];
+  const items = [["home","ホーム","home"],["path","旅","map"],["duel","対戦","spark"],["study","学習","learn"]];
   return `<nav class="bottom-nav" aria-label="メインナビゲーション">${items.map(([id,label,ico])=>`<button class="nav-item ${active===id||id==="capsule"&&state.ui.modal?.startsWith("capsule") ? "active" : ""}" ${id==="study" ? 'data-start="daily"' : `data-nav="${id}"`} ${active===id ? 'aria-current="page"' : ''}>${icons[ico]}<span>${label}</span></button>`).join("")}</nav>`;
 }
 function statusBarHtml() {
@@ -412,7 +412,7 @@ function renderHome() {
   const learned=Object.values(state.words).filter(record=>!record.diagnosticOnly&&record.correct>0).length;
   const adventure=TangoAdventure.normalize(state.adventure),zone=TangoAdventure.zoneAt(adventure.position.z),objective=TangoAdventure.objective(adventure);
   return `
-<main class="screen home-screen minimal-home expedition-home"><div class="home-dashboard"><section class="home-voyage" aria-labelledby="home-voyage-title"><header><div><span class="home-kicker">現在の旅</span><h2 id="home-voyage-title">${zone.name}</h2></div><span class="home-region-count">${TangoAdventure.highest(adventure.completed)+1} / 5 地域</span></header>${renderPath(true)}<div class="home-voyage-footer"><div><strong>${objective.title}</strong><span>${objective.remaining?'学習をあと'+objective.remaining+'回完了で開放':'開いた世界を自由に探索できます'}</span></div><button class="primary-btn" data-nav="path">旅を続ける ${icons.arrow}</button></div></section><section class="home-learning" aria-labelledby="home-learning-title"><div class="home-card-top"><span>${icons.learn} 今日の学習</span><span class="home-state">${done>=target?'目標達成':done>0?'学習中':'未開始'}</span></div><h2 id="home-learning-title">移動せずに学習</h2><p>復習と新しい単語を、今の習得状況に合わせて出題します。</p><div class="home-word-plan"><div><strong>${due}</strong><span>復習する単語</span></div><span class="home-plan-plus" aria-hidden="true">＋</span><div><strong>${fresh}</strong><span>新しい単語</span></div></div>${plan.selected.length?'<button class="primary-btn home-study-start" data-start="daily">学習を始める '+icons.arrow+'</button>':'<p class="home-next-review">次の復習：'+reviewTimeLabel(plan.nextReviewAt)+'</p><button class="primary-btn home-study-start" data-nav="path">旅に出る '+icons.arrow+'</button>'}<div class="home-daily-progress"><div><span>今日の目標</span><strong>${done}<small> / ${target}問</small></strong></div><div class="quest-meter" role="progressbar" aria-label="今日の学習目標" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${Math.min(done,target)}"><i style="width:${percent}%"></i></div></div></section></div></main>`;
+<main class="screen home-screen minimal-home expedition-home"><p class="lexora-data-notice">Lexoraでは出題改善のため、問題形式・正誤・復習間隔などの学習履歴を収集します。モデル用データに名前・メール・写真は含めません。 <a href="privacy.html">詳しく見る</a></p><div class="home-dashboard"><section class="home-voyage" aria-labelledby="home-voyage-title"><header><div><span class="home-kicker">現在の旅</span><h2 id="home-voyage-title">${zone.name}</h2></div><span class="home-region-count">${TangoAdventure.highest(adventure.completed)+1} / ${TangoAdventure.ZONES.length} 地域</span></header>${renderPath(true)}<div class="home-voyage-footer"><div><strong>${objective.title}</strong><span>${objective.remaining?'学習をあと'+objective.remaining+'回完了で開放':'開いた世界を自由に探索できます'}</span></div><button class="primary-btn" data-nav="path">旅を続ける ${icons.arrow}</button></div></section><section class="home-learning" aria-labelledby="home-learning-title"><div class="home-card-top"><span>${icons.learn} 今日の学習</span><span class="home-state">${done>=target?'目標達成':done>0?'学習中':'未開始'}</span></div><h2 id="home-learning-title">移動せずに学習</h2><p>復習と新しい単語を、今の習得状況に合わせて出題します。</p><div class="home-word-plan"><div><strong>${due}</strong><span>復習する単語</span></div><span class="home-plan-plus" aria-hidden="true">＋</span><div><strong>${fresh}</strong><span>新しい単語</span></div></div>${plan.selected.length?'<button class="primary-btn home-study-start" data-start="daily">学習を始める '+icons.arrow+'</button>':'<p class="home-next-review">次の復習：'+reviewTimeLabel(plan.nextReviewAt)+'</p><button class="primary-btn home-study-start" data-nav="path">旅に出る '+icons.arrow+'</button>'}<div class="home-daily-progress"><div><span>今日の目標</span><strong>${done}<small> / ${target}問</small></strong></div><div class="quest-meter" role="progressbar" aria-label="今日の学習目標" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${Math.min(done,target)}"><i style="width:${percent}%"></i></div></div></section></div></main>`;
 
 }
 
@@ -475,9 +475,10 @@ function renderApp() {
   const active = state.ui.view;
   document.body.dataset.theme = state.settings.dark ? "mono" : "light";
   document.body.dataset.colorMode = state.settings.dark ? "dark" : "light";
-  const main = active === "placement" ? renderPlacement() : active === "home" ? renderHome() : active === "path" ? renderPath() : renderHome();
+  const main = active === "placement" ? renderPlacement() : active === "duel" ? LexoraDuel.render() : active === "home" ? renderHome() : active === "path" ? renderPath() : renderHome();
   app.innerHTML = `<div class="app-shell ${active==='path'?'adventure-shell':''}">${active === "placement" ? "" : statusBarHtml()}${main}${active === "placement" ? "" : navHtml(active)}${renderModal()}</div>`;
   window.TangoWorld?.mount();
+  if(active==='duel')LexoraDuel.mount();else window.LexoraDuel?.unmount();
   persist();
 }
 
@@ -636,9 +637,16 @@ function animateSwipe(known) {
   }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 290);
 }
 
+let reviewFlush=null;
+async function flushReviews(){
+ if(!cloudUser||reviewFlush)return;const batch=(state.reviewEvents||[]).slice(0,100);if(!batch.length)return;
+ reviewFlush=true;try{await TangoCloud.recordReviews(batch);const sent=new Set(batch.map(e=>e.event_id));state.reviewEvents=(state.reviewEvents||[]).filter(e=>!sent.has(e.event_id));persist({sync:false});}catch{ /* Offline queue retries after the next answer. */ }finally{reviewFlush=null;}
+}
 function updateWordData(word, known) {
   if(learning?.auto)return;
   const previous=state.words[word.id];
+  const review=LexoraLearning.event(word,previous,known,questionMode());
+  if(review){state.reviewEvents=[...(state.reviewEvents||[]),review].slice(-LexoraLearning.MAX_PENDING);setTimeout(flushReviews,0);}
   state.words[word.id] = {...TangoScheduler.practice(previous, known, questionMode()),diagnosticOnly:false};
   if(learning&&!learning.auto){state.learningSignals.push({correct:known,weight:questionMode()==="recall" ? .35 : questionMode()==="spelling" ? 1 : .7});state.learningSignals=state.learningSignals.slice(-30);}
   state.lessonProgress = TangoProgress.answer(vocab, state.lessonProgress, state.completedLessons, word.id, courseRoute());
@@ -827,8 +835,8 @@ function toggleBadge(id) {
   persist(); renderApp();
 }
 function shareProfile() {
-  const text = `TANGO｜Lv ${state.level} · ${state.streak} day streak\n${state.equippedBadges.map(badgeName).join(" · ") || "Badgeを集め中"}`;
-  if (navigator.share) navigator.share({ title: "TANGO", text }).catch(() => {});
+  const text = `Lexora｜Lv ${state.level} · ${state.streak} day streak\n${state.equippedBadges.map(badgeName).join(" · ") || "Badgeを集め中"}`;
+  if (navigator.share) navigator.share({ title: "Lexora", text }).catch(() => {});
   else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast("共有用テキストをコピーしました。", "good")).catch(() => toast(text));
   else toast(text);
 }
@@ -858,7 +866,7 @@ window.addEventListener("click", event => {
   if(target.dataset.profileBadge){const id=target.dataset.profileBadge;if(!profileDraft||!state.ownedBadges.includes(id))return;if(profileDraft.badges.includes(id))profileDraft.badges=profileDraft.badges.filter(b=>b!==id);else if(profileDraft.badges.length<3)profileDraft.badges.push(id);else {toast("バッジは3つまで選べます。","normal");return;}renderApp();return;}
   if (target.dataset.nav) {
     const requested = target.dataset.nav;
-    state.ui.view = ["home","path"].includes(requested)?requested:"home";
+    state.ui.view = ["home","path","duel"].includes(requested)?requested:"home";
     state.ui.modal = null; renderApp();
     window.scrollTo({top:0,behavior:"instant"});
     return;

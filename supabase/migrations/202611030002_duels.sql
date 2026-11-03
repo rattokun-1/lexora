@@ -19,7 +19,7 @@ begin
   delete from private.duel_queue where queued_at<t-interval '120 seconds';
   select user_id into opponent from private.duel_queue where user_id<>uid and abs(band-lvl)<=2 order by queued_at limit 1;
   if opponent is null then insert into private.duel_queue values(uid,lvl,t) on conflict(user_id) do nothing;return jsonb_build_object('state','waiting');end if;
-  select array_agg(id) into deck from (select id from private.duel_questions where abs(band-lvl)<=1 order by random() limit 200) s;
+  select array_agg(id) into deck from (select id from private.duel_questions order by abs(band-lvl),random() limit 200) s;
   if coalesce(array_length(deck,1),0)<20 then raise exception '問題データが未設定です';end if;
   insert into private.duels(a,b,deck) values(opponent,uid,deck) returning * into d;
   delete from private.duel_queue where user_id in (uid,opponent);

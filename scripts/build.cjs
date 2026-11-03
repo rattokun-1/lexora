@@ -1,0 +1,1 @@
+const fs=require('node:fs');fs.mkdirSync('dist',{recursive:true});for(const p of ['index.html','new-word-data.js','sw.js','.htaccess','src'])fs.cpSync(p,'dist/'+p,{recursive:true});console.log('Static release created in dist/');

@@ -6,6 +6,12 @@
   const TARGET = 0.9;
   const lib = typeof module !== 'undefined' && module.exports ? require('./vendor/ts-fsrs-5.2.3.js') : root.FSRS;
   const engine = lib.fsrs({request_retention:TARGET,maximum_interval:365,enable_fuzz:false});
+  function selectedEngine(){
+    const m=root.LexoraModel,p=m?.parameters;
+    if(!m?.eligible||m.kind!=='logistic-calibration-v1'||!Number.isFinite(p?.intercept)||!Number.isFinite(p?.slope)||p.slope<=0||p.slope>5||Math.abs(p.intercept)>5)return engine;
+    const target=1/(1+Math.exp(-(Math.log(TARGET/(1-TARGET))-p.intercept)/p.slope));
+    return lib.fsrs({request_retention:Math.max(.7,Math.min(.99,target)),maximum_interval:365,enable_fuzz:false});
+  }
   const clamp = (x, min, max) => Math.max(min, Math.min(max, x));
   const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
@@ -31,7 +37,7 @@
       difficulty:before.difficulty, state:lib.State.Review, reps:Math.max(1,finite(previous.reviews,1)),
       lapses:Math.max(0,finite(previous.wrong)), last_review:new Date(previous.lastSeen)
     };
-    const scheduled=engine.next(card,new Date(now),known?lib.Rating.Good:lib.Rating.Again);
+    const scheduled=selectedEngine().next(card,new Date(now),known?lib.Rating.Good:lib.Rating.Again);
     const next=scheduled.card;
     return {...previous,schedulerVersion:2,fsrsVersion:'FSRS-6 / ts-fsrs 5.2.3',fsrsCard:next,
       reviewLog:[...(Array.isArray(previous.reviewLog)?previous.reviewLog:[]),{...scheduled.log,review:new Date(now).toISOString()}],

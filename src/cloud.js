@@ -6,6 +6,8 @@
  async function init(){if(client)return client;if(!configured())return null;if(!loading)loading=import('https://esm.sh/@supabase/supabase-js@2.105.0').then(({createClient})=>client=createClient(config().url,config().publishableKey,{auth:{experimental:{passkey:true},persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})).catch(e=>{loading=null;throw e;});return loading;}
  async function required(){const c=await init();if(!c)throw Error('Supabaseの接続設定が必要です。');return c;}
  root.TangoCloud={configured,init,
+  async recordReviews(events){const c=await required();const {data,error}=await c.rpc('lexora_record_reviews',{events});if(error)throw error;return data;},
+  async activeModel(){const c=await required();const {data,error}=await c.from('learning_models').select('artifact').eq('active',true).maybeSingle();if(error)throw error;return data?.artifact||null;},
   async onAuth(callback){const c=await init();if(!c){callback(null);return;}c.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>callback(session?.user||null),0);});},
   async signIn(){const c=await required();const {data,error}=await c.auth.signInWithPasskey();if(error)throw error;return data;},
   async registerPasskey(){const c=await required();const {data,error}=await c.auth.registerPasskey();if(error)throw error;return data;},

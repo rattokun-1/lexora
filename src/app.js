@@ -106,6 +106,10 @@ const themes = [
 ];
 
 function avatarMarkup(id, label = "", image = "") { return `<span class="avatar avatar-custom avatar-photo" aria-label="${escapeHTML(label || "プロフィール写真")}"><img src="${escapeHTML(image || "./src/assets/profile-default.svg")}" alt="" /></span>`; }
+window.KotomiaUI = {
+  avatar: () => avatarMarkup(state.profile.avatarId, state.profile.name, state.profile.avatarImage),
+  isLoggedIn: () => Boolean(state.profile.loggedIn)
+};
 
 const todayKey = () => TangoProgress.dayKey();
 const cleanInitialName = (name) => /^(ミナト|みなと|minato|TANGO USER|Lexora USER)$/i.test(String(name || "").trim()) ? "コトミア USER" : (name || "コトミア USER");

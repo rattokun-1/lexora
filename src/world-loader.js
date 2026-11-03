@@ -8,7 +8,7 @@
    const load=()=>{
     observer?.disconnect();observer=null;
     if(loading)return;
-    loading=import('./world-map.bundle.js?v=1.4.0').catch(()=>{
+    loading=import('./world-map.bundle.js?v=1.5.0').catch(()=>{
      loading=null;const current=document.querySelector('.adventure-world');
      if(current){current.classList.add('adventure-fallback');current.querySelector('.adventure-status').textContent='3Dマップを読み込めませんでした。レッスン一覧から学習できます。';}
     });

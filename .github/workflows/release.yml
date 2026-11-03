@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm run check && npm test && npm run build
-      - run: cd dist && zip -r ../lexora-${GITHUB_REF_NAME}.zip .
-      - run: gh release create "$GITHUB_REF_NAME" "lexora-${GITHUB_REF_NAME}.zip" --verify-tag --generate-notes
+      - run: cd dist && zip -r ../kotomia-${GITHUB_REF_NAME}.zip .
+      - run: gh release create "$GITHUB_REF_NAME" "kotomia-${GITHUB_REF_NAME}.zip" --verify-tag --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}

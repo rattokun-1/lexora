@@ -72,7 +72,7 @@ for (const word of vocab) {
     for (let i = 0; i < pool.length && meanings.size < 4; i++)
       meanings.add(pool[(offset + i) % pool.length].meaning);
   }
-  word.options = [...meanings];
+  word.options = KotomiaChoices.shuffle([...meanings]);
 }
 
 const sections = [
@@ -264,7 +264,7 @@ const defaultState = () => ({
   streakHistory: [],
   completedLessons: [],
   worldGifts: [],
-  adventure: TangoAdventure.normalize(null),
+  adventure: null,
   lessonProgress: {},
   placement: null,
   placementAttempt: null,
@@ -324,7 +324,7 @@ function mergeState(saved) {
     placementAttempt: attempt?.status === "in_progress" ? attempt : null,
     courseOrder: TangoProgress.order(TangoProgress.count(vocab), saved.courseOrder),
     gacha: TangoGacha.normalize(saved.gacha),
-    adventure: TangoAdventure.normalize(saved.adventure),
+    adventure: saved.adventure || null,
     worldGifts: [
       ...new Set(
         Array.isArray(saved.worldGifts)
@@ -643,7 +643,7 @@ function renderEnrollment() {
     "パスキーを作成",
   ];
   const busy = authBusy ? '<span class="enroll-spinner" aria-hidden="true"></span>' : "";
-  return `<div class="modal-backdrop enrollment-backdrop"><section class="modal enrollment-modal" data-enroll-stage="${stage}" aria-busy="${authBusy}" role="dialog" aria-modal="true" aria-labelledby="enroll-title"><header class="enroll-header"><span class="enroll-kicker">${recover ? "アカウントの復旧" : "アカウントの作成"}</span><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></header><div class="enroll-progress" aria-label="登録の進捗"><div class="enroll-progress-meta"><span>STEP <b>0${step}</b></span><span>0${step} / 03</span></div><div class="enroll-progress-track" role="progressbar" aria-label="${labels[step - 1]}" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${step}" aria-valuetext="3段階中${step}段階目：${labels[step - 1]}"><i style="--enroll-progress:${(step / 3) * 100}%"></i></div><ol class="enroll-step-labels">${labels.map((label, i) => `<li class="${i + 1 === step ? "current" : i + 1 < step ? "done" : ""}" ${i + 1 === step ? 'aria-current="step"' : ""}><span>${i + 1 < step ? "✓" : i + 1}</span>${label}</li>`).join("")}</ol></div><div class="enroll-content"><h2 id="enroll-title">${titles[step - 1]}</h2><p class="enroll-intro">${step === 1 ? (recover ? "確認後、新しいパスキーを登録できます。" : "旅で使う名前と、復旧用のメールを設定します。") : step === 2 ? "メールに届いた確認コードを入力してください。" : "顔認証・指紋認証・端末のPINで登録できます。"}</p>${stage === "passkey" ? `<div class="enroll-passkey-art" aria-hidden="true"><div>${icons.user}</div><span>${icons.check}</span></div><div class="enroll-confirmed">${icons.check}メールの確認ができました</div><button class="primary-btn enroll-submit" data-action="passkey-register" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "登録中…" : "パスキーを作成する"}</button><p class="enroll-footnote">パスワードを覚える必要はありません。</p>` : `<form id="enrollment-form">${stage === "profile" ? `${!recover ? `<label class="enroll-avatar">${avatarMarkup("", enrollment.name, enrollment.avatarImage)}<span class="enroll-photo-copy"><strong>プロフィール写真</strong><small>写真を選ぶ · 未選択なら標準画像</small></span><span class="enroll-photo-action">${icons.camera}</span><input id="enroll-avatar" class="enroll-file-input" type="file" accept="image/png,image/jpeg,image/webp" aria-label="プロフィール写真を選ぶ" /></label><label>ニックネーム<input name="nickname" autocomplete="nickname" maxlength="20" required placeholder="旅で使う名前" value="${escapeHTML(enrollment.name)}" /></label>` : ""}<label>復旧用メールアドレス<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="${escapeHTML(enrollment.email)}" /></label><p class="enroll-field-note">${recover ? "アカウントに登録したメールアドレスを入力してください。" : "パスキーを紛失したときの本人確認に使います。"}</p>` : `<div class="enroll-email-destination">${icons.mail}<span>${escapeHTML(enrollment.email)}</span></div><label>確認コード<input class="enroll-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required placeholder="確認コード" /></label>`}<button class="primary-btn enroll-submit" type="submit" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "処理中…" : stage === "profile" ? "確認コードを送る" : "メールを確認する"}${authBusy ? "" : icons.arrow}</button>${stage === "code" ? '<button class="text-link enroll-resend" type="button" data-action="enroll-resend">コードを再送信</button>' : '<p class="enroll-footnote">パスワードは作成しません。コトミアは出題改善のため学習履歴を収集します。<a href="privacy.html" target="_blank" rel="noopener">データの取り扱い</a></p>'}</form>`}</div></section></div>`;
+  return `<div class="modal-backdrop enrollment-backdrop"><section class="modal enrollment-modal" data-enroll-stage="${stage}" aria-busy="${authBusy}" role="dialog" aria-modal="true" aria-labelledby="enroll-title"><header class="enroll-header"><span class="enroll-kicker">${recover ? "アカウントの復旧" : "アカウントの作成"}</span><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></header><div class="enroll-progress" aria-label="登録の進捗"><div class="enroll-progress-meta"><span>STEP <b>0${step}</b></span><span>0${step} / 03</span></div><div class="enroll-progress-track" role="progressbar" aria-label="${labels[step - 1]}" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${step}" aria-valuetext="3段階中${step}段階目：${labels[step - 1]}"><i style="--enroll-progress:${(step / 3) * 100}%"></i></div><ol class="enroll-step-labels">${labels.map((label, i) => `<li class="${i + 1 === step ? "current" : i + 1 < step ? "done" : ""}" ${i + 1 === step ? 'aria-current="step"' : ""}><span>${i + 1 < step ? "✓" : i + 1}</span>${label}</li>`).join("")}</ol></div><div class="enroll-content"><h2 id="enroll-title">${titles[step - 1]}</h2><p class="enroll-intro">${step === 1 ? (recover ? "確認後、新しいパスキーを登録できます。" : "アプリで使う名前と、復旧用のメールを設定します。") : step === 2 ? "メールに届いた確認コードを入力してください。" : "顔認証・指紋認証・端末のPINで登録できます。"}</p>${stage === "passkey" ? `<div class="enroll-passkey-art" aria-hidden="true"><div>${icons.user}</div><span>${icons.check}</span></div><div class="enroll-confirmed">${icons.check}メールの確認ができました</div><button class="primary-btn enroll-submit" data-action="passkey-register" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "登録中…" : "パスキーを作成する"}</button><p class="enroll-footnote">パスワードを覚える必要はありません。</p>` : `<form id="enrollment-form">${stage === "profile" ? `${!recover ? `<label class="enroll-avatar">${avatarMarkup("", enrollment.name, enrollment.avatarImage)}<span class="enroll-photo-copy"><strong>プロフィール写真</strong><small>写真を選ぶ · 未選択なら標準画像</small></span><span class="enroll-photo-action">${icons.camera}</span><input id="enroll-avatar" class="enroll-file-input" type="file" accept="image/png,image/jpeg,image/webp" aria-label="プロフィール写真を選ぶ" /></label><label>ニックネーム<input name="nickname" autocomplete="nickname" maxlength="20" required placeholder="アプリで使う名前" value="${escapeHTML(enrollment.name)}" /></label>` : ""}<label>復旧用メールアドレス<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="${escapeHTML(enrollment.email)}" /></label><p class="enroll-field-note">${recover ? "アカウントに登録したメールアドレスを入力してください。" : "パスキーを紛失したときの本人確認に使います。"}</p>` : `<div class="enroll-email-destination">${icons.mail}<span>${escapeHTML(enrollment.email)}</span></div><label>確認コード<input class="enroll-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required placeholder="確認コード" /></label>`}<button class="primary-btn enroll-submit" type="submit" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "処理中…" : stage === "profile" ? "確認コードを送る" : "メールを確認する"}${authBusy ? "" : icons.arrow}</button>${stage === "code" ? '<button class="text-link enroll-resend" type="button" data-action="enroll-resend">コードを再送信</button>' : '<p class="enroll-footnote">パスワードは作成しません。コトミアは出題改善のため学習履歴を収集します。<a href="privacy.html" target="_blank" rel="noopener">データの取り扱い</a></p>'}</form>`}</div></section></div>`;
 }
 async function passkeyAction(register = false) {
   if (authBusy) return;
@@ -766,12 +766,7 @@ function brandHtml() {
   return `<a class="brand tango-brand" href="#" data-nav="home" aria-label="コトミア ホーム">${logoHtml()}<span>コトミア</span></a>`;
 }
 function navHtml(active) {
-  const items = [
-    ["home", "ホーム", "home"],
-    ["path", "旅", "map"],
-    ["study", "学習", "learn"],
-    ["duel", "対戦", "spark"],
-  ];
+  const items = [["home","ステージ","home"],["study","学習","learn"],["ranking","順位","rank"],["duel","対戦","spark"],["capsule","ガチャ","gift"]];
   return `<nav class="bottom-nav" aria-label="メインナビゲーション">${items.map(([id, label, ico]) => `<button class="nav-item ${id === "study" ? "nav-study" : ""} ${active === id || (id === "capsule" && state.ui.modal?.startsWith("capsule")) ? "active" : ""}" ${id === "study" ? 'data-start="daily"' : `data-nav="${id}"`} ${active === id ? 'aria-current="page"' : ""}>${icons[ico]}<span>${label}</span></button>`).join("")}</nav>`;
 }
 function statusBarHtml() {
@@ -892,48 +887,12 @@ window.addEventListener("click", (event) => {
     button.dataset.placementChoice === "unknown" ? null : Number(button.dataset.placementChoice),
   );
 });
-function renderHome() {
-  if (!state.placement?.result)
-    return `<main class="screen home-screen minimal-home"><section class="home-study placement-home"><span class="eyebrow">YOUR STARTING POINT</span><h1>あなたに合う学習を、ここから。</h1><p>回答に合わせたレベルチェックで、最初のコースと学習量を合わせます。</p><button class="primary-btn home-start-button" data-action="placement-open">${state.placementAttempt ? `診断を再開する（${state.placementAttempt.answers.length}問回答済み）` : "レベルチェックを始める"} ${icons.arrow}</button><small>途中保存できます。診断でHPは減りません。</small></section></main>`;
-  const plan = learningPlan(),
-    due = plan.selected.filter((item) => !item.isNew).length,
-    fresh = plan.selected.filter((item) => item.isNew).length;
-  const done = state.daily.date === todayKey() ? state.daily.words : 0,
-    target = 10,
-    percent = Math.min(100, (done / target) * 100);
-  const learned = Object.values(state.words).filter(
-    (record) => !record.diagnosticOnly && record.correct > 0,
-  ).length;
-  const adventure = TangoAdventure.normalize(state.adventure),
-    zone = TangoAdventure.zoneAt(adventure.position.z),
-    objective = TangoAdventure.objective(adventure);
-  return `
-<main class="screen home-screen minimal-home expedition-home"><p class="lexora-data-notice">コトミアでは出題改善のため、問題形式・正誤・復習間隔などの学習履歴を収集します。モデル用データに名前・メール・写真は含めません。 <a href="privacy.html">詳しく見る</a></p><section class="home-launch"><div><span class="home-kicker">今日の学習</span><h1>単語を学ぼう</h1><p>復習 ${due}語 · 新しい単語 ${fresh}語</p></div><button class="primary-btn" data-start="daily">${done > 0 ? "学習を再開" : "学習スタート"} ${icons.arrow}</button></section><div class="home-dashboard"><section class="home-voyage" aria-labelledby="home-voyage-title"><header><div><span class="home-kicker">現在の旅</span><h2 id="home-voyage-title">${zone.name}</h2></div><span class="home-region-count">${TangoAdventure.highest(adventure.completed) + 1} / ${TangoAdventure.ZONES.length} 地域</span></header>${renderPath(true)}<div class="home-voyage-footer"><div><strong>${objective.title}</strong><span>${objective.remaining ? "学習をあと" + objective.remaining + "回完了で開放" : "開いた世界を自由に探索できます"}</span></div><button class="primary-btn" data-nav="path">旅を続ける ${icons.arrow}</button></div></section><section class="home-learning" aria-labelledby="home-learning-title"><div class="home-card-top"><span>${icons.learn} 今日の学習</span><span class="home-state">${done >= target ? "目標達成" : done > 0 ? "学習中" : "未開始"}</span></div><h2 id="home-learning-title">あなたに合わせた学習</h2><p>復習と新しい単語を、今の習得状況に合わせて出題します。</p><div class="home-word-plan"><div><strong>${due}</strong><span>復習する単語</span></div><span class="home-plan-plus" aria-hidden="true">＋</span><div><strong>${fresh}</strong><span>新しい単語</span></div></div>${plan.selected.length ? '<button class="primary-btn home-study-start" data-start="daily">学習を始める ' + icons.arrow + "</button>" : '<p class="home-next-review">次の復習：' + reviewTimeLabel(plan.nextReviewAt) + '</p><button class="primary-btn home-study-start" data-nav="path">旅に出る ' + icons.arrow + "</button>"}<div class="home-daily-progress"><div><span>今日の目標</span><strong>${done}<small> / ${target}問</small></strong></div><div class="quest-meter" role="progressbar" aria-label="今日の学習目標" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${Math.min(done, target)}"><i style="width:${percent}%"></i></div></div></section></div><button class="home-duel-link" data-nav="duel"><span><strong>ワードスプリント</strong><small>60秒のランダム対戦</small></span><span>対戦する ${icons.arrow}</span></button></main>`;
+function renderHome(){
+ const plan=learningPlan(),done=state.daily.date===todayKey()?state.daily.words:0;
+ return `<main class="screen home-screen stage-home"><section class="home-launch"><div><span class="home-kicker">コトミア · 英単語学習</span><h1>今日のステージへ</h1><p>復習 ${plan.selected.filter(x=>!x.isNew).length}語 · 新しい単語 ${plan.selected.filter(x=>x.isNew).length}語</p></div><button class="primary-btn" ${state.placement?.result?'data-start="daily"':'data-action="placement-open"'}>${state.placement?.result?'学習スタート':'レベルチェックを始める'} ${icons.arrow}</button></section><div class="stage-home-links"><button data-nav="capsule">${icons.gift}<strong>星のアトリエ</strong><span>学習コインでガチャ</span></button><button data-nav="duel">${icons.spark}<strong>ワードスプリント</strong><span>60秒の単語対戦</span></button></div><section class="stage-path" aria-label="学習ステージ"><header><h2>ステージ</h2><p>完了 ${state.completedLessons.length} / ${TangoProgress.count(vocab)} · 今日 ${done}問</p></header>${renderStages()}</section><p class="lexora-data-notice">出題改善のため学習履歴を収集します。<a href="privacy.html">データの取り扱い</a></p></main>`;
 }
-
-function renderPath(embedded = false) {
-  const progress = TangoAdventure.normalize(state.adventure),
-    objective = TangoAdventure.objective(progress),
-    zone = TangoAdventure.zoneAt(progress.position.z),
-    currentZone = TangoAdventure.highest(progress.completed);
-  const model = { state: progress };
-  return `${embedded ? '<section class="home-journey adventure-preview" aria-label="旅の現在地">' : '<main class="screen adventure-screen">'}<section class="adventure-world" data-preview="${embedded}" data-adventure-model="${escapeHTML(JSON.stringify(model))}"><header class="adventure-header"><button class="icon-btn adventure-info" data-action="adventure-info" aria-label="旅の使い方">${icons.info}</button><div><span>現在地</span><h2>${zone.name}</h2></div><button class="primary-btn" data-start="daily">今日の学習 ${icons.learn}</button></header>${embedded ? "" : `<section class="adventure-objective" aria-label="旅の目的"><span>${icons.flag}</span><div><strong>${objective.title}</strong><small>${objective.remaining ? `学習をあと${objective.remaining}回完了すると道が開きます` : "どこでも復習や探索を続けられます"}</small></div><span class="adventure-progress-count">${progress.completed}回 学習完了</span></section>`}<div class="adventure-viewport" role="region" aria-label="主人公を操作する3Dの世界"><span class="adventure-loading">旅の世界を準備しています…</span><span class="adventure-location">${zone.name}</span>${embedded ? "" : `<div class="adventure-camera" aria-label="カメラ距離"><button data-adventure-zoom="4" aria-label="景色を広く見る">−</button><button data-adventure-zoom="-4" aria-label="主人公に近づく">＋</button></div><div class="adventure-touch"><div class="adventure-stick" role="group" aria-label="移動スティック"><span class="adventure-stick-knob"></span><small>移動</small></div><button class="adventure-interact" data-adventure-interact disabled><span>${icons.spark}</span><strong data-adventure-action-label>調べる</strong><kbd>E</kbd></button></div><div class="adventure-nearby" aria-live="polite">石碑や人物に近づくと調べられます</div><section class="adventure-dialog" role="dialog" aria-modal="true" aria-label="旅の会話" hidden><span class="adventure-dialog-mark">${icons.spark}</span><h3 data-dialog-title></h3><p data-dialog-text></p><div><button class="outline-btn" data-adventure-later>あとで</button><button class="primary-btn" data-adventure-learn>学習する ${icons.arrow}</button></div></section>`}</div><p class="adventure-status" role="status">今日の学習から、移動せずに始められます。</p>${embedded ? `<button class="map-expand" data-nav="path">旅に出る ${icons.arrow}</button>` : ""}</section>${embedded ? "</section>" : "</main>"}`;
-}
-function claimWorldGift(id) {
-  const gift = TangoWorldData.claim(
-    courseRoute(),
-    state.completedLessons,
-    state.worldGifts || [],
-    id,
-  );
-  if (!gift) return;
-  state.worldGifts = [...(state.worldGifts || []), gift.id];
-  state.coin += gift.coins;
-  persist();
-  renderApp();
-  toast(`${gift.coins}コインを受け取りました！`, "good");
-}
-
+function renderStages(){const route=courseRoute(),front=currentLesson(),pos=route.indexOf(front),page=Math.max(0,Math.min(Math.floor((pos<0?route.length-1:pos)/10),Number(state.ui.stagePage??Math.floor(Math.max(0,pos)/10))));const visible=route.slice(page*10,page*10+10);return `<div class="stage-chapter"><span>チャプター ${page+1}</span><div class="stage-road">${visible.map((index,i)=>{const done=state.completedLessons.includes(index),open=isUnlocked(index),current=index===front,n=page*10+i+1;return `<div class="stage-stop ${done?'done':current?'current':'locked'}" style="--bend:${[0,1,1,0,-1,-1,0,1,0,-1][i]}"><button ${open&&state.placement?.result?'data-start="unit-'+(index+1)+'"':'disabled'} aria-label="ステージ ${n}${done?' 完了':current?' 学習する':' 未解放'}">${done?icons.check:open?n:icons.lock}</button><strong>${n}</strong><small>${done?'完了':current?'ここから': '未解放'}</small></div>`;}).join('')}</div><div class="stage-pagination"><button class="outline-btn" data-stage-page="${page-1}" ${page===0?'disabled':''}>前へ</button><span>${page+1} / ${Math.ceil(route.length/10)}</span><button class="outline-btn" data-stage-page="${page+1}" ${(page+1)*10>=route.length||page>=Math.floor((pos<0?route.length-1:pos)/10)?'disabled':''}>次へ</button></div></div>`;}
+function renderPath(){return renderHome();}
 function renderProfileEditor() {
   if (!profileDraft)
     profileDraft = {
@@ -942,7 +901,7 @@ function renderProfileEditor() {
       badges: [...state.equippedBadges],
     };
   const owned = badges.filter((b) => state.ownedBadges.includes(b.id));
-  return `<div class="modal-backdrop" data-close-modal><section class="modal profile-editor" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title"><div class="modal-head"><h2 id="profile-edit-title">プロフィールを編集</h2><button class="icon-btn" data-action="close-modal" aria-label="編集をキャンセル">${icons.close}</button></div><form id="profile-form"><div class="editor-photo"><button class="editor-photo-picker" type="button" data-action="choose-avatar">${avatarMarkup(state.profile.avatarId, profileDraft.name, profileDraft.avatarImage)}<span>${icons.camera} 写真を変更</span></button><input id="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden />${profileDraft.avatarImage ? `<button class="text-link" type="button" data-action="reset-avatar-photo">初期画像に戻す</button>` : ""}</div><div class="field"><label for="display-name">${icons.user} 表示名</label><input id="display-name" name="displayName" maxlength="20" required autocomplete="nickname" value="${escapeHTML(profileDraft.name || "")}" placeholder="表示名を入力" /><small>旅で使う表示名です。</small></div><footer class="profile-editor-footer"><button class="outline-btn" type="button" data-action="close-modal">キャンセル</button><button class="primary-btn" type="submit">${icons.check} 変更を保存</button></footer></form></section></div>`;
+  return `<div class="modal-backdrop" data-close-modal><section class="modal profile-editor" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title"><div class="modal-head"><h2 id="profile-edit-title">プロフィールを編集</h2><button class="icon-btn" data-action="close-modal" aria-label="編集をキャンセル">${icons.close}</button></div><form id="profile-form"><div class="editor-photo"><button class="editor-photo-picker" type="button" data-action="choose-avatar">${avatarMarkup(state.profile.avatarId, profileDraft.name, profileDraft.avatarImage)}<span>${icons.camera} 写真を変更</span></button><input id="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden />${profileDraft.avatarImage ? `<button class="text-link" type="button" data-action="reset-avatar-photo">初期画像に戻す</button>` : ""}</div><div class="field"><label for="display-name">${icons.user} 表示名</label><input id="display-name" name="displayName" maxlength="20" required autocomplete="nickname" value="${escapeHTML(profileDraft.name || "")}" placeholder="表示名を入力" /><small>アプリで使う表示名です。</small></div><footer class="profile-editor-footer"><button class="outline-btn" type="button" data-action="close-modal">キャンセル</button><button class="primary-btn" type="submit">${icons.check} 変更を保存</button></footer></form></section></div>`;
 }
 function renderAccountPopup() {
   return `<div class="modal-backdrop account-backdrop" data-close-modal><section class="modal account-popup" role="dialog" aria-modal="true" aria-labelledby="account-title"><div class="modal-head"><h2 id="account-title">コトミア</h2><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></div><div class="account-identity">${avatarMarkup(state.profile.avatarId, state.profile.name, state.profile.avatarImage)}<div><h3>${escapeHTML(state.profile.name)}</h3><p>${escapeHTML(cloudUser?.email || "この端末に保存中")}</p></div></div><div class="account-summary"><span>今日の学習<strong>${state.daily.date === todayKey() ? state.daily.words : 0}語</strong></span><span>連続学習<strong>${state.streak}日</strong></span></div><div class="account-links"><button class="primary-btn" data-action="account-settings">アカウント設定 ${icons.arrow}</button>${state.profile.loggedIn ? '<button class="text-link" data-action="logout">ログアウト</button>' : ""}</div></section></div>`;
@@ -954,8 +913,6 @@ function renderModal() {
   const modal = state.ui.modal;
   if (!modal) return "";
   if (modal === "enrollment") return renderEnrollment();
-  if (modal === "adventure-info")
-    return `<div class="modal-backdrop" data-close-modal><section class="modal adventure-help-popup" role="dialog" aria-modal="true" aria-labelledby="adventure-help-title"><div class="modal-head"><h2 id="adventure-help-title">旅の使い方</h2><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></div><h3>自由に歩く</h3><p>PCはWASD・矢印キー、スマホは左のスティックで移動します。右上の＋・−で景色の広さを変えられます。</p><h3>調べて学習する</h3><p>石碑・焚き火・人物の近くで、Eキーか「調べる」を押してください。会話や寄り道は任意です。「今日の学習」から直接始めることもできます。</p><h3>次の地域へ</h3><p>学習を完了すると道が開きます。全問正解する必要はありません。開いた地域では宝箱や景色を探しながら自由に探索できます。</p></section></div>`;
   if (modal === "account") return renderAccountPopup();
   if (modal === "account-settings") return renderAccountSettings();
 
@@ -1049,13 +1006,13 @@ function renderApp() {
         ? LexoraDuel.render()
         : active === "home"
           ? renderHome()
-          : active === "path"
-            ? renderPath()
-            : renderHome();
-  app.innerHTML = `<div class="app-shell ${active === "path" ? "adventure-shell" : ""}">${active === "placement" ? "" : statusBarHtml()}${main}${active === "placement" ? "" : navHtml(active)}${renderModal()}</div>`;
+          : active === "ranking" ? KotomiaRanking.render() : active === "capsule" ? renderAtelier() : renderHome();
+  app.innerHTML = `<div class="app-shell">${active === "placement" ? "" : statusBarHtml()}${main}${active === "placement" ? "" : navHtml(active)}${renderModal()}</div>`;
   document.body.classList.remove("chrome-compact");
   document.body.dataset.screen = active;
-  window.TangoWorld?.mount();
+  if(active==="ranking")KotomiaRanking.mount();else KotomiaRanking.unmount();
+  window.KotomiaFeed?.dispose();
+  document.body.dataset.collectible=state.equippedBadges[0]||"";
   if (active === "duel") LexoraDuel.mount();
   else window.LexoraDuel?.unmount();
   if (state.ui.modal && !previousModal) {
@@ -1083,7 +1040,7 @@ function learningPlan(options = {}) {
       Math.min(
         10,
         preferences.level +
-          Math.floor(TangoAdventure.normalize(state.adventure).completed / 4) -
+          Math.floor(state.completedLessons.length / 4) -
           (signal !== null && signal < 0.6 ? 1 : 0),
       ),
     );
@@ -1206,7 +1163,7 @@ function isTest() {
   return questionMode() !== "recall";
 }
 function renderLearning() {
-  window.TangoWorld?.dispose();
+  window.KotomiaFeed?.dispose();
   dismissSwipeIntro();
   if (!learning) {
     state.ui.view = "home";
@@ -1218,13 +1175,13 @@ function renderLearning() {
   const word = currentWord();
   const test = isTest();
   const progress = (learning.index / learning.words.length) * 100;
-  const showSwipeIntro = !test && !state.settings.swipeIntroSeen;
+  const showSwipeIntro = false;
   if (showSwipeIntro) state.settings.swipeIntroSeen = true;
   const saved = state.savedWords.includes(word.id);
   const difficult = state.difficultWords.includes(word.id);
   const currentCard = test
     ? `<div class="current-test-card">${renderQuickTest(word)}</div>`
-    : `<div class="word-card" id="word-card" role="button" tabindex="0" aria-label="単語カード。Enterかスペースで意味を表示。意味の表示後は上スワイプか上矢印で覚えた、下スワイプか下矢印でわからないを回答できます。"><div class="word-count">QUESTION ${String(learning.index + 1).padStart(2, "0")} / ${learning.words.length}</div><div class="word-english" id="word-text" style="font-size:${wordFontSize(word.word)}px">${word.word}</div><div class="word-phonetic">${word.kana}</div><div class="tap-hint" id="tap-hint">${learning.revealed ? "" : "タップして意味を表示"}</div><div class="translation-wrap ${learning.revealed ? "show" : ""}" id="translation"><div class="translation-label">意味</div><div class="translation">${word.meaning}</div></div></div><div class="recall-controls">${learning.revealed ? `<button class="outline-btn" data-action="recall-forgot">思い出せない</button><button class="primary-btn" data-action="recall-known">思い出せた ${icons.check}</button>` : `<button class="primary-btn" data-action="recall-reveal">意味を確認する</button>`}</div>`;
+    : `<div class="word-card" id="word-card" role="button" tabindex="0" aria-label="単語カード。Enterかスペースで意味を表示。解答はボタンを押してください。"><div class="word-count">QUESTION ${String(learning.index + 1).padStart(2, "0")} / ${learning.words.length}</div><div class="word-english" id="word-text" style="font-size:${wordFontSize(word.word)}px">${word.word}</div><div class="word-phonetic">${word.kana}</div><div class="tap-hint" id="tap-hint">${learning.revealed ? "" : "タップして意味を表示"}</div><div class="translation-wrap ${learning.revealed ? "show" : ""}" id="translation"><div class="translation-label">意味</div><div class="translation">${word.meaning}</div></div></div><div class="recall-controls">${learning.revealed ? `<button class="outline-btn" data-action="recall-forgot">思い出せない</button><button class="primary-btn" data-action="recall-known">思い出せた ${icons.check}</button>` : `<button class="primary-btn" data-action="recall-reveal">意味を確認する</button>`}</div>`;
   const wordStage = currentCard;
   const lessonLabel =
     learning.id === "daily"
@@ -1236,7 +1193,7 @@ function renderLearning() {
     ? ""
     : `<aside class="action-rail" aria-label="学習アクション"><div class="action-stack"><button class="action-orb" data-learn-action="pronounce" aria-label="発音">${icons.volume}</button><span>発音</span></div><div class="action-stack"><button class="action-orb ${saved ? "active" : ""}" data-learn-action="save" aria-label="保存">${icons.bookmark}</button><span>保存</span></div><div class="action-stack"><button class="action-orb ${difficult ? "active" : ""}" data-learn-action="difficult" aria-label="苦手">${icons.flag}</button><span>苦手</span></div><div class="action-stack"><button class="action-orb" data-learn-action="skip" aria-label="スキップ">${icons.skip}</button><span>スキップ</span></div><div class="action-stack"><button class="action-orb ${learning.auto ? "active" : ""}" data-learn-action="auto" aria-label="自動">${icons.auto}</button><span>自動</span></div></aside>`;
   document.body.dataset.screen = "learn";
-  app.innerHTML = `<div class="app-shell learn-screen"><main class="screen learn-screen"><header class="learn-top"><button class="icon-btn" data-action="exit-learn" aria-label="学習を終了">${icons.close}</button><div class="learn-progress"><small>${lessonLabel}</small><div class="progress-rail"><div class="progress-bar" style="--progress:${progress}%"></div></div><span class="question-mode-label">${test ? (questionMode() === "study" ? "単語を確認" : questionMode() === "spelling" ? "英単語を書く" : "意味を選ぶ") : "意味を思い出す"}</span></div><span class="short-hp" aria-label="HP ${state.hp}">${icons.heart}<b>${state.hp}</b></span></header><div class="learn-meta"><span>${questionMode() === "study" ? "新しい単語を確認" : "覚えた単語を復習"}</span><span class="combo">${state.combo ? `${state.combo} COMBO` : ""}</span></div>${state.fever ? `<div class="fever-banner show" id="fever">${icons.spark} FEVER · XP ×2 · ${state.feverSeconds || 20}s</div>` : ""}<div class="word-stage ${test ? "test-stage" : ""}" id="word-stage">${wordStage}${showSwipeIntro ? renderSwipeIntro() : ""}</div>${actionRail}</main></div>`;
+  app.innerHTML = `<div class="app-shell learn-screen"><main class="screen learn-screen"><header class="learn-top"><button class="icon-btn" data-action="exit-learn" aria-label="学習を終了">${icons.close}</button><div class="learn-progress"><small>${lessonLabel}</small><div class="progress-rail"><div class="progress-bar" style="--progress:${progress}%"></div></div><span class="question-mode-label">${test ? (questionMode() === "study" ? "単語を確認" : questionMode() === "spelling" ? "英単語を書く" : "意味を選ぶ") : "意味を思い出す"}</span></div><span class="short-hp" aria-label="HP ${state.hp}">${icons.heart}<b>${state.hp}</b></span></header><div class="learn-meta"><span>${questionMode() === "study" ? "新しい単語を確認" : "覚えた単語を復習"}</span><span class="combo">${state.combo ? `${state.combo} COMBO` : ""}</span></div>${state.fever ? `<div class="fever-banner show" id="fever">${icons.spark} FEVER · XP ×2 · ${state.feverSeconds || 20}s</div>` : ""}<div class="study-feed" tabindex="0" aria-label="縦にスクロールする問題カード">${learning.index>0?'<article class="feed-page feed-history"><span>前の単語 · 閲覧のみ</span><h2>'+escapeHTML(learning.words[learning.index-1].word)+'</h2><p>'+escapeHTML(learning.words[learning.index-1].meaning)+'</p><small>下へスクロールして現在の問題へ</small></article>':''}<article class="feed-page" data-feed-current><div class="word-stage ${test?'test-stage':''}" id="word-stage">${wordStage}</div><div class="feed-actions"><button class="text-link" data-learn-action="pronounce">発音</button><button class="text-link" data-learn-action="skip">スキップ</button></div><p class="feed-hint">↑ スクロールで次の問題へ · 未回答は採点されません</p></article><article class="feed-page feed-next" data-feed-next><span>次の問題へ</span><strong>↑</strong><p>未回答の単語はあとで復習できます</p></article></div></main></div>`;
   persist();
   setupLearningEvents();
   if (learning.keyboardAnswer) {
@@ -1257,7 +1214,7 @@ function renderQuickTest(word) {
     return `<section class="quick-test"><h2>${escapeHTML(word.word)}</h2><p>この単語に合う意味は？</p><div class="answers">${word.options.map((meaning, i) => `<button class="answer-btn" data-test-answer="${i}"><span>${letters[i]}</span><strong>${escapeHTML(meaning)}</strong></button>`).join("")}</div><button class="test-dont-know" data-action="dont-know">わからない</button><div id="test-result" class="test-result" aria-live="polite"></div></section>`;
   if (mode === "spelling")
     return `<section class="quick-test spelling-test"><div class="test-label">WRITE IT</div><h2 class="spelling-prompt">${word.meaning}</h2><p>英単語を入力して答えよう</p><form id="spelling-form" autocomplete="off"><label class="visually-hidden" for="spelling-answer">英単語</label><input id="spelling-answer" name="answer" type="text" autocapitalize="none" spellcheck="false" autocomplete="off" placeholder="英単語を入力" required /><button class="primary-btn spelling-submit" type="submit">答えを確認</button></form><button class="test-dont-know" data-action="dont-know">わからない</button><div id="test-result" class="test-result" aria-live="polite"></div></section>`;
-  const options = learning.englishOptions[learning.index] || makeEnglishOptions(word);
+  const options = learning.englishOptions[learning.index]?.length ? learning.englishOptions[learning.index] : (learning.englishOptions[learning.index] = makeEnglishOptions(word));
   return `<section class="quick-test meaning-select-test"><div class="test-label">日本語から選ぶ</div><h2 class="meaning-prompt">${escapeHTML(word.meaning)}</h2><p>この意味に合う英単語は？</p><div class="answers">${options.map((option, i) => `<button class="answer-btn" data-test-answer="${i}"><span class="answer-letter">${letters[i]}</span><strong>${escapeHTML(option.word)}</strong></button>`).join("")}</div><button class="test-dont-know" data-action="dont-know">わからない</button><div id="test-result" class="test-result" aria-live="polite"></div></section>`;
 }
 function renderSwipeIntro() {
@@ -1270,70 +1227,10 @@ function dismissSwipeIntro() {
   }
   document.querySelector(".swipe-intro")?.remove();
 }
-function setupLearningEvents() {
-  const card = document.querySelector("#word-card");
-  if (!card || isTest()) return;
-  let startY = 0,
-    deltaY = 0,
-    moved = false,
-    pointerId = null;
-  const reset = () => {
-    card.classList.remove("dragging");
-    delete card.dataset.swipeDirection;
-    card.style.removeProperty("--swipe-progress");
-    card.style.removeProperty("--swipe-y");
-    pointerId = null;
-  };
-  card.addEventListener("pointerdown", (event) => {
-    if (
-      pointerId !== null ||
-      learning?.answerPending ||
-      (event.pointerType === "mouse" && event.button !== 0)
-    )
-      return;
-    startY = event.clientY;
-    deltaY = 0;
-    moved = false;
-    pointerId = event.pointerId;
-    card.setPointerCapture?.(pointerId);
-  });
-  card.addEventListener("pointermove", (event) => {
-    if (event.pointerId !== pointerId) return;
-    deltaY = event.clientY - startY;
-    if (Math.abs(deltaY) > 12) moved = true;
-    if (learning?.revealed && !learning.answerPending) {
-      card.classList.add("dragging");
-      card.dataset.swipeDirection = deltaY < 0 ? "up" : "down";
-      card.style.setProperty("--swipe-progress", String(Math.min(1, Math.abs(deltaY) / 100)));
-      card.style.setProperty("--swipe-y", `${Math.max(-140, Math.min(140, deltaY))}px`);
-    }
-  });
-  card.addEventListener("pointerup", (event) => {
-    if (event.pointerId !== pointerId) return;
-    const shouldAnswer = learning?.revealed && Math.abs(deltaY) > 54;
-    const shouldReveal = !moved && !learning?.revealed;
-    const known = deltaY < 0;
-    reset();
-    if (shouldAnswer) animateSwipe(known);
-    else if (shouldReveal) revealCurrent();
-  });
-  card.addEventListener("keydown", (event) => {
-    if (["Enter", " "].includes(event.key)) {
-      event.preventDefault();
-      if (!learning?.revealed) revealCurrent();
-    }
-    if (learning?.revealed && ["ArrowUp", "ArrowDown"].includes(event.key)) {
-      event.preventDefault();
-      learning.keyboardAnswer = true;
-      animateSwipe(event.key === "ArrowUp");
-    }
-  });
-  card.addEventListener("pointercancel", reset);
-  card.addEventListener("lostpointercapture", () => {
-    if (pointerId !== null) reset();
-  });
+function setupLearningEvents(){
+ const card=document.getElementById('word-card');card?.addEventListener('click',()=>{if(!learning?.revealed)revealCurrent();});card?.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();revealCurrent();}});
+ KotomiaFeed.mount(document.querySelector('.study-feed'),()=>{if(!learning||learning.testAnswered||learning.answerPending)return;learnAction('skip');});
 }
-
 function revealCurrent() {
   if (!learning || learning.revealed || isTest()) return;
   learning.revealed = true;
@@ -1531,11 +1428,12 @@ function testAnswer(choice) {
   if (!learning || learning.testAnswered) return;
   const word = currentWord();
   const mode = questionMode();
-  const correct = word.options[choice] === word.meaning;
+  const selectedOptions=mode==="meaning-select"?word.options:learning.englishOptions[learning.index];
+  const correct = mode==="meaning-select"?selectedOptions[choice]===word.meaning:selectedOptions[choice]?.id===word.id;
   learning.testAnswered = true;
   document.querySelectorAll("[data-test-answer]").forEach((btn) => {
     const index = Number(btn.dataset.testAnswer);
-    const isCorrect = word.options[index] === word.meaning;
+    const isCorrect = mode==="meaning-select"?selectedOptions[index]===word.meaning:selectedOptions[index]?.id===word.id;
     btn.disabled = true;
     if (isCorrect) btn.classList.add("correct");
     else if (index === choice) btn.classList.add("wrong");
@@ -1610,14 +1508,9 @@ function finishLearning() {
   clearFever();
   state.fever = false;
   const automaticLesson = learning.id === "daily";
-  const fromAdventure = Boolean(learning.adventureSource);
-  const beforeRegion = TangoAdventure.highest(TangoAdventure.normalize(state.adventure).completed);
+  const fromAdventure = false;
   const hadAnswers = (learning.answeredIds || []).length > 0;
-  const finishedAll = learning.initialIds.every((id) => (learning.answeredIds || []).includes(id));
-  if (finishedAll && hadAnswers && !learning.usedAuto)
-    state.adventure = TangoAdventure.complete(state.adventure, learning.sessionId);
-  const openedRegion =
-    TangoAdventure.highest(TangoAdventure.normalize(state.adventure).completed) > beforeRegion;
+  const finishedAll = learning.initialIds.every(id=>(learning.answeredIds||[]).includes(id));
   const completedIndex = learning.lessonIndex;
   const beforeCompleted = [...state.completedLessons];
   if (hadAnswers)
@@ -1633,7 +1526,7 @@ function finishLearning() {
   if (automaticLesson && finishedAll) state.daily.lessons += 1;
   else if (!automaticLesson && newLesson) state.daily.lessons += unlockedNew.length;
   if (!hadAnswers) {
-    state.ui.view = "path";
+    state.ui.view = "home";
     state.ui.modal = null;
     learning = null;
     persist();
@@ -1676,7 +1569,7 @@ function finishLearning() {
   learning = null;
   persist();
   renderApp();
-  if (openedRegion) toast("記憶の灯が戻り、新しい道が開きました。", "good");
+
 }
 function learnAction(action) {
   if (!learning) return;
@@ -1708,6 +1601,8 @@ function learnAction(action) {
   if (action === "skip") {
     toast("スキップしました。あとでまた出会えます。", "normal");
     learning.index += 1;
+    learning.testAnswered = false;
+    learning.answerPending = false;
     learning.revealed = false;
     if (learning.index >= learning.words.length) finishLearning();
     else renderLearning();
@@ -1721,7 +1616,7 @@ function learnAction(action) {
 }
 let capsuleLastResults = [];
 function useCapsule(count = 1) {
-  if (!["capsule-menu", "capsule-info"].includes(state.ui.modal)) return;
+  if (state.ui.view!=="capsule" && !["capsule-menu", "capsule-info"].includes(state.ui.modal)) return;
   const result = TangoGacha.draw(state, count);
   if (!result.ok) {
     toast(
@@ -1794,13 +1689,11 @@ function badgeArt(id) {
   const glyph = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${shapes[Math.max(0, index)]}</svg>`;
   return `<span class="badge-art badge-art-${Math.max(0, index)}">${glyph}</span>`;
 }
-function renderCapsuleMenu() {
-  const gacha = TangoGacha.normalize(state.gacha);
-  return `<div class="modal-backdrop shrine-backdrop" data-close-modal><section class="modal shrine-modal" role="dialog" aria-modal="true" aria-labelledby="gacha-title"><header class="shrine-heading"><div><span>旅の祈願所</span><h2 id="gacha-title">星灯の祠</h2></div><button class="icon-btn" data-action="close-modal" aria-label="旅に戻る">${icons.close}</button></header><div class="shrine-art" aria-hidden="true"><div class="shrine-halo"></div><div class="shrine-crystal">${icons.spark}</div><div class="shrine-pedestal"></div><i></i><i></i><i></i></div><p class="shrine-description">旅で集めたコインを、贈り物に。</p><div class="shrine-balance">${icons.coin}<span>所持コイン</span><strong>${state.coin}</strong></div><div class="shrine-guarantee"><span>バッジ確定まで <b>あと${10 - gacha.cycle}回</b></span><div>${Array.from({ length: 10 }, (_, i) => `<i class="${i < gacha.cycle ? "lit" : ""}"></i>`).join("")}</div></div><div class="shrine-actions"><button class="primary-btn" data-action="capsule-draw" ${state.coin < 100 ? "disabled" : ""}>1回祈願する <small>${icons.coin}100</small></button><button class="outline-btn" data-action="capsule-five" ${state.coin < 500 ? "disabled" : ""}>5回祈願する <small>${icons.coin}500</small></button></div>${state.coin < 100 ? `<p class="shrine-hint">あと${100 - state.coin}コイン。学習や宝箱で集められます。</p>` : ""}<details class="shrine-rates"><summary>贈り物と確率</summary><p>10回目は未所持のバッジから均等に抽選します。全種類所持後はコインに交換します。</p>${TangoGacha.rewards.map((r) => `<div><span>${escapeHTML(r.name)}</span><b>${r.weight}%</b></div>`).join("")}<p>重複はR:25・SR:40・SSR:75コインに交換。HP満タン時は回復ストックになります。</p></details><details class="shrine-history"><summary>祈願の履歴 · ${gacha.total}回</summary>${gacha.history.map((r) => `<div><span>${escapeHTML(r.name)}</span><small>${escapeHTML(r.effect || "")}</small></div>`).join("") || "<p>まだ祈願していません。</p>"}</details></section></div>`;
-}
+function renderAtelier(){const g=TangoGacha.normalize(state.gacha);return `<main class="screen atelier-screen"><header class="feature-heading"><span>学習で集めて、自分らしく</span><h1>星のアトリエ</h1><p>集めたバッジをプロフィールと背景に飾ろう。</p></header><section class="atelier-machine"><div class="atelier-orbit" aria-hidden="true"><span>✦</span><i></i><i></i><i></i></div><div class="atelier-balance">${icons.coin}<b>${state.coin}</b><span>学習コイン</span></div><p>10回目は未所持バッジ確定 · あと${10-g.cycle}回</p><div class="atelier-pity" aria-label="確定バッジまでの進捗">${Array.from({length:10},(_,i)=>'<i class="'+(i<g.cycle?'lit':'')+'"></i>').join('')}</div><div class="atelier-draw"><button class="primary-btn" data-action="capsule-draw" ${state.coin<100?'disabled':''}>1回開く <small>100コイン</small></button><button class="outline-btn" data-action="capsule-five" ${state.coin<500?'disabled':''}>5回開く <small>500コイン</small></button></div><small>学習で獲得する仮想コインのみ。${state.coin<100?'学習してコインを集めよう。':''}</small></section><section class="atelier-album"><h2>バッジアルバム</h2><p>獲得したバッジを選ぶと背景も変化します。</p><div class="album-grid">${TangoGacha.rewards.map(r=>{const owned=state.ownedBadges.includes(r.id);return `<button data-equip-badge="${r.id}" ${owned?'':'disabled'} class="album-badge ${state.equippedBadges.includes(r.id)?'equipped':''}" aria-label="${escapeHTML(r.name)} ${owned?'装備する':'未獲得'}">${badgeArt(r.id)}<strong>${escapeHTML(r.name)}</strong><small>${owned?(state.equippedBadges.includes(r.id)?'装備中':'獲得済み'):'未獲得'}</small></button>`;}).join('')}</div></section><details class="atelier-details"><summary>確率・重複・履歴</summary><p>通常の抽選確率。10回目は未所持バッジから均等に抽選します。全所持後は重複分をコインに交換します。</p>${TangoGacha.rewards.map(r=>'<p>'+escapeHTML(r.name)+' · '+r.weight+'%</p>').join('')}<p>重複：R 25 / SR 40 / SSR 75コインに交換。</p><h3>直近の履歴 · 全${g.total}回</h3>${g.history.map(r=>'<p>'+escapeHTML(r.name)+' · '+escapeHTML(r.effect)+'</p>').join('')||'<p>まだ引いていません。</p>'}</details></main>`;}
+function renderCapsuleMenu(){return `<div class="modal-backdrop" data-close-modal><section class="modal" role="dialog" aria-modal="true" aria-label="ガチャ"><h2>星のアトリエ</h2><button class="primary-btn" data-nav="capsule">ガチャへ</button><button class="text-link" data-action="close-modal">閉じる</button></section></div>`;}
 function renderCapsuleResult() {
   const results = capsuleLastResults.length ? capsuleLastResults : state.gacha.history.slice(0, 1);
-  return `<div class="modal-backdrop" data-close-modal><section class="modal capsule-result gacha-result" role="dialog" aria-modal="true" aria-labelledby="gacha-result-title"><div class="modal-head"><h2 id="gacha-result-title">祠からの贈り物</h2><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></div><div class="gacha-results ${results.length === 1 ? "single" : ""}">${results.map((r, i) => `<article class="gacha-reward rarity-border-${r.rarity}" style="--reveal:${i}"><span class="rarity rarity-${r.rarity}">${escapeHTML(r.rarity)}</span>${rewardIcon(r)}${r.kind === "badge" && !r.duplicate ? '<span class="gacha-new">NEW</span>' : ""}<h3>${escapeHTML(r.name)}</h3><p>${escapeHTML(r.effect || "")}</p>${r.guaranteed ? '<small class="gacha-guaranteed">10回目の確定バッジ</small>' : ""}</article>`).join("")}</div><p class="gacha-result-balance">${icons.coin} 残り ${state.coin}コイン</p><button class="primary-btn" data-action="capsule-menu">祠に戻る ${icons.arrow}</button>${results.some((r) => r.kind === "badge" && !r.duplicate) ? `<button class="text-link" data-action="gacha-profile">${icons.edit} プロフィールに装備する</button>` : ""}</section></div>`;
+  return `<div class="modal-backdrop" data-close-modal><section class="modal capsule-result gacha-result" role="dialog" aria-modal="true" aria-labelledby="gacha-result-title"><div class="modal-head"><h2 id="gacha-result-title">獲得したバッジ</h2><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></div><div class="gacha-results ${results.length === 1 ? "single" : ""}">${results.map((r, i) => `<article class="gacha-reward rarity-border-${r.rarity}" style="--reveal:${i}"><span class="rarity rarity-${r.rarity}">${escapeHTML(r.rarity)}</span>${rewardIcon(r)}${r.kind === "badge" && !r.duplicate ? '<span class="gacha-new">NEW</span>' : ""}<h3>${escapeHTML(r.name)}</h3><p>${escapeHTML(r.effect || "")}</p>${r.guaranteed ? '<small class="gacha-guaranteed">10回目の確定バッジ</small>' : ""}</article>`).join("")}</div><p class="gacha-result-balance">${icons.coin} 残り ${state.coin}コイン</p><button class="primary-btn" data-nav="capsule">祠に戻る ${icons.arrow}</button>${results.some((r) => r.kind === "badge" && !r.duplicate) ? `<button class="text-link" data-action="gacha-profile">${icons.edit} プロフィールに装備する</button>` : ""}</section></div>`;
 }
 function addTheme(theme) {
   if (!state.ownedThemes.includes(theme)) state.ownedThemes.push(theme);
@@ -1935,9 +1828,11 @@ window.addEventListener("click", (event) => {
     renderApp();
     return;
   }
+  if(target.dataset.stagePage!==undefined){state.ui.stagePage=Math.max(0,Number(target.dataset.stagePage)||0);renderApp();return;}
+  if(target.dataset.equipBadge){const id=target.dataset.equipBadge;if(state.ownedBadges.includes(id)){state.equippedBadges=[id];persist();renderApp();}return;}
   if (target.dataset.nav) {
     const requested = target.dataset.nav;
-    state.ui.view = ["home", "path", "duel"].includes(requested) ? requested : "home";
+    state.ui.view = ["home", "duel", "ranking", "capsule"].includes(requested) ? requested : "home";
     state.ui.modal = null;
     renderApp();
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -2046,10 +1941,6 @@ window.addEventListener("click", (event) => {
   if (action === "review") {
     startLearning("review");
     return;
-  }
-  if (action === "adventure-info") {
-    state.ui.modal = "adventure-info";
-    renderApp();
   }
   if (action === "account") {
     state.ui.modal = state.ui.modal === "account" ? null : "account";
@@ -2251,45 +2142,6 @@ function refreshMemoryPlan() {
 setInterval(refreshMemoryPlan, 60000);
 document.addEventListener("visibilitychange", refreshMemoryPlan);
 
-window.addEventListener("tango-adventure-position", (event) => {
-  const base = TangoAdventure.normalize(state.adventure),
-    p = event.detail;
-  if (
-    p &&
-    Number.isFinite(p.x) &&
-    Number.isFinite(p.z) &&
-    TangoAdventure.canWalk(p.x, p.z, base.completed)
-  ) {
-    state.adventure = { ...base, position: { x: p.x, z: p.z } };
-    persist({ sync: false });
-  }
-});
-window.addEventListener("tango-adventure-study", (event) => {
-  if (!TangoAdventure.POINTS.some((p) => p.id === event.detail?.source)) return;
-  startLearning("daily");
-  if (learning) learning.adventureSource = event.detail.source;
-});
-window.addEventListener("tango-adventure-chest", (event) => {
-  const base = TangoAdventure.normalize(state.adventure),
-    p = event.detail?.position;
-  if (!p || !TangoAdventure.canWalk(p.x, p.z, base.completed)) return;
-  const result = TangoAdventure.claim({ ...base, position: p }, event.detail.id);
-  if (!result) return;
-  state.adventure = result.state;
-  state.coin += result.coins;
-  persist();
-  renderApp();
-  toast(result.coins + "コインを見つけました。", "good");
-});
-
-window.addEventListener("tango-adventure-shrine", (event) => {
-  const p = event.detail?.position,
-    shrine = TangoAdventure.POINTS.find((p) => p.kind === "shrine");
-  if (!p || !shrine || Math.hypot(p.x - shrine.x, p.z - shrine.z) > 3.4) return;
-  state.ui.modal = "capsule-menu";
-  renderApp();
-});
-
 window.addEventListener("submit", (event) => {
   if (event.target.id === "enrollment-form") {
     event.preventDefault();
@@ -2322,8 +2174,3 @@ window.addEventListener(
   },
   { passive: true },
 );
-window.addEventListener("kotomia-walking", (event) => {
-  clearTimeout(chromeReturn);
-  if (event.detail) document.body.classList.add("chrome-compact");
-  else chromeReturn = setTimeout(() => document.body.classList.remove("chrome-compact"), 700);
-});

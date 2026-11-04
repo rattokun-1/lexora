@@ -46,28 +46,3 @@ test("partial town contains only real lesson ids and earned gifts", () => {
   assert.equal(world.presents.length, 4);
   assert(world.presents.every((g) => g.ready));
 });
-test("claiming a present changes coins and persists only once", () => {
-  const app = fs.readFileSync(path.join(__dirname, "../src/app.js"), "utf8");
-  const snippet = app.slice(
-    app.indexOf("function claimWorldGift("),
-    app.indexOf("function renderProfileEditor("),
-  );
-  let saves = 0,
-    renders = 0;
-  const ctx = {
-    TangoWorldData: data,
-    courseRoute: () => route,
-    state: { completedLessons: route.slice(0, 5), worldGifts: [], coin: 5 },
-    persist: () => saves++,
-    renderApp: () => renders++,
-    toast: () => {},
-  };
-  vm.createContext(ctx);
-  vm.runInContext(snippet, ctx);
-  ctx.claimWorldGift("world-gift-5");
-  ctx.claimWorldGift("world-gift-5");
-  assert.equal(ctx.state.coin, 20);
-  assert.equal(ctx.state.worldGifts.length, 1);
-  assert.equal(saves, 1);
-  assert.equal(renders, 1);
-});

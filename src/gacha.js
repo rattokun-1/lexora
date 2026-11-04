@@ -2,103 +2,16 @@
 (function (root) {
   "use strict";
   const rewards = [
-    {
-      id: "hp5",
-      name: "HP +5",
-      rarity: "N",
-      weight: 20,
-      kind: "hp",
-      amount: 5,
-    },
-    {
-      id: "stock1",
-      name: "HP回復ストック ×1",
-      rarity: "N",
-      weight: 25,
-      kind: "hpStock",
-      amount: 1,
-    },
-    {
-      id: "stock3",
-      name: "HP回復ストック ×3",
-      rarity: "N",
-      weight: 15,
-      kind: "hpStock",
-      amount: 3,
-    },
-    {
-      id: "keep",
-      name: "連続記録キープ ×1",
-      rarity: "R",
-      weight: 10,
-      kind: "streakKeep",
-      amount: 1,
-    },
-    {
-      id: "focus",
-      name: "FOCUS",
-      rarity: "R",
-      weight: 8,
-      kind: "badge",
-      note: "集中のしるし",
-    },
-    {
-      id: "sakura-star",
-      name: "SAKURA STAR",
-      rarity: "R",
-      weight: 8,
-      kind: "badge",
-      note: "春色のしるし",
-    },
-    {
-      id: "lunar",
-      name: "LUNAR",
-      rarity: "SR",
-      weight: 3,
-      kind: "badge",
-      note: "月明かりの静けさ",
-    },
-    {
-      id: "comet",
-      name: "COMET",
-      rarity: "SR",
-      weight: 3,
-      kind: "badge",
-      note: "一歩ずつ、遠くへ",
-    },
-    {
-      id: "tidal",
-      name: "TIDAL",
-      rarity: "SR",
-      weight: 3,
-      kind: "badge",
-      note: "知識の波をつかまえて",
-    },
-    {
-      id: "verdant",
-      name: "VERDANT",
-      rarity: "SR",
-      weight: 3,
-      kind: "badge",
-      note: "毎日の小さな芽吹き",
-    },
-    {
-      id: "prism",
-      name: "PRISM",
-      rarity: "SSR",
-      weight: 1,
-      kind: "badge",
-      note: "光を集める探究者",
-    },
-    {
-      id: "orbit",
-      name: "ORBIT",
-      rarity: "SSR",
-      weight: 1,
-      kind: "badge",
-      note: "学びは、どこまでも",
-    },
+    {id:'focus',name:'FOCUS',rarity:'R',weight:20,kind:'badge'},
+    {id:'sakura-star',name:'SAKURA STAR',rarity:'R',weight:20,kind:'badge'},
+    {id:'lunar',name:'LUNAR',rarity:'SR',weight:12,kind:'badge'},
+    {id:'comet',name:'COMET',rarity:'SR',weight:12,kind:'badge'},
+    {id:'tidal',name:'TIDAL',rarity:'SR',weight:12,kind:'badge'},
+    {id:'verdant',name:'VERDANT',rarity:'SR',weight:12,kind:'badge'},
+    {id:'prism',name:'PRISM',rarity:'SSR',weight:6,kind:'badge'},
+    {id:'orbit',name:'ORBIT',rarity:'SSR',weight:6,kind:'badge'},
   ];
+  const historyRewards=[...rewards,{id:"hp5",name:"HP +5",rarity:"N",kind:"hp"},{id:"stock1",name:"HP回復ストック ×1",rarity:"N",kind:"hpStock"},{id:"stock3",name:"HP回復ストック ×3",rarity:"N",kind:"hpStock"},{id:"keep",name:"連続記録キープ ×1",rarity:"R",kind:"streakKeep"}];
   const integer = (value, max = 1000000000) =>
     Math.min(max, Math.max(0, Math.floor(Number(value) || 0)));
   function normalize(saved) {
@@ -109,14 +22,14 @@
         ? saved.history
             .filter(
               (x) =>
-                rewards.some((r) => r.id === x?.id) &&
+                historyRewards.some((r) => r.id === x?.id) &&
                 Number.isFinite(x.at) &&
                 x.at >= 0 &&
                 x.at <= 8640000000000000,
             )
             .slice(0, 30)
             .map((x) => {
-              const r = rewards.find((r) => r.id === x.id);
+              const r = historyRewards.find((r) => r.id === x.id);
               return {
                 id: r.id,
                 name: r.name,

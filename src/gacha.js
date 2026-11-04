@@ -2,16 +2,22 @@
 (function (root) {
   "use strict";
   const rewards = [
-    {id:'focus',name:'FOCUS',rarity:'R',weight:20,kind:'badge'},
-    {id:'sakura-star',name:'SAKURA STAR',rarity:'R',weight:20,kind:'badge'},
-    {id:'lunar',name:'LUNAR',rarity:'SR',weight:12,kind:'badge'},
-    {id:'comet',name:'COMET',rarity:'SR',weight:12,kind:'badge'},
-    {id:'tidal',name:'TIDAL',rarity:'SR',weight:12,kind:'badge'},
-    {id:'verdant',name:'VERDANT',rarity:'SR',weight:12,kind:'badge'},
-    {id:'prism',name:'PRISM',rarity:'SSR',weight:6,kind:'badge'},
-    {id:'orbit',name:'ORBIT',rarity:'SSR',weight:6,kind:'badge'},
+    { id: "focus", name: "FOCUS", rarity: "R", weight: 20, kind: "badge" },
+    { id: "sakura-star", name: "SAKURA STAR", rarity: "R", weight: 20, kind: "badge" },
+    { id: "lunar", name: "LUNAR", rarity: "SR", weight: 12, kind: "badge" },
+    { id: "comet", name: "COMET", rarity: "SR", weight: 12, kind: "badge" },
+    { id: "tidal", name: "TIDAL", rarity: "SR", weight: 12, kind: "badge" },
+    { id: "verdant", name: "VERDANT", rarity: "SR", weight: 12, kind: "badge" },
+    { id: "prism", name: "PRISM", rarity: "SSR", weight: 6, kind: "badge" },
+    { id: "orbit", name: "ORBIT", rarity: "SSR", weight: 6, kind: "badge" },
   ];
-  const historyRewards=[...rewards,{id:"hp5",name:"HP +5",rarity:"N",kind:"hp"},{id:"stock1",name:"HP回復ストック ×1",rarity:"N",kind:"hpStock"},{id:"stock3",name:"HP回復ストック ×3",rarity:"N",kind:"hpStock"},{id:"keep",name:"連続記録キープ ×1",rarity:"R",kind:"streakKeep"}];
+  const historyRewards = [
+    ...rewards,
+    { id: "hp5", name: "HP +5", rarity: "N", kind: "hp" },
+    { id: "stock1", name: "HP回復ストック ×1", rarity: "N", kind: "hpStock" },
+    { id: "stock3", name: "HP回復ストック ×3", rarity: "N", kind: "hpStock" },
+    { id: "keep", name: "連続記録キープ ×1", rarity: "R", kind: "streakKeep" },
+  ];
   const integer = (value, max = 1000000000) =>
     Math.min(max, Math.max(0, Math.floor(Number(value) || 0)));
   function normalize(saved) {

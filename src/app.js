@@ -766,7 +766,13 @@ function brandHtml() {
   return `<a class="brand tango-brand" href="#" data-nav="home" aria-label="コトミア ホーム">${logoHtml()}<span>コトミア</span></a>`;
 }
 function navHtml(active) {
-  const items = [["home","ステージ","home"],["study","学習","learn"],["ranking","順位","rank"],["duel","対戦","spark"],["capsule","ガチャ","gift"]];
+  const items = [
+    ["home", "ステージ", "home"],
+    ["study", "学習", "learn"],
+    ["ranking", "ランキング", "rank"],
+    ["duel", "対戦", "spark"],
+    ["capsule", "ガチャ", "gift"],
+  ];
   return `<nav class="bottom-nav" aria-label="メインナビゲーション">${items.map(([id, label, ico]) => `<button class="nav-item ${id === "study" ? "nav-study" : ""} ${active === id || (id === "capsule" && state.ui.modal?.startsWith("capsule")) ? "active" : ""}" ${id === "study" ? 'data-start="daily"' : `data-nav="${id}"`} ${active === id ? 'aria-current="page"' : ""}>${icons[ico]}<span>${label}</span></button>`).join("")}</nav>`;
 }
 function statusBarHtml() {
@@ -887,12 +893,38 @@ window.addEventListener("click", (event) => {
     button.dataset.placementChoice === "unknown" ? null : Number(button.dataset.placementChoice),
   );
 });
-function renderHome(){
- const plan=learningPlan(),done=state.daily.date===todayKey()?state.daily.words:0;
- return `<main class="screen home-screen stage-home"><section class="home-launch"><div><span class="home-kicker">コトミア · 英単語学習</span><h1>今日のステージへ</h1><p>復習 ${plan.selected.filter(x=>!x.isNew).length}語 · 新しい単語 ${plan.selected.filter(x=>x.isNew).length}語</p></div><button class="primary-btn" ${state.placement?.result?'data-start="daily"':'data-action="placement-open"'}>${state.placement?.result?'学習スタート':'レベルチェックを始める'} ${icons.arrow}</button></section><div class="stage-home-links"><button data-nav="capsule">${icons.gift}<strong>星のアトリエ</strong><span>学習コインでガチャ</span></button><button data-nav="duel">${icons.spark}<strong>ワードスプリント</strong><span>60秒の単語対戦</span></button></div><section class="stage-path" aria-label="学習ステージ"><header><h2>ステージ</h2><p>完了 ${state.completedLessons.length} / ${TangoProgress.count(vocab)} · 今日 ${done}問</p></header>${renderStages()}</section><p class="lexora-data-notice">出題改善のため学習履歴を収集します。<a href="privacy.html">データの取り扱い</a></p></main>`;
+function renderHome() {
+  const plan = learningPlan(),
+    done = state.daily.date === todayKey() ? state.daily.words : 0;
+  return `<main class="screen home-screen stage-home"><section class="home-launch"><div><span class="home-kicker">コトミア · 英単語学習</span><h1>今日のステージへ</h1><p>復習 ${plan.selected.filter((x) => !x.isNew).length}語 · 新しい単語 ${plan.selected.filter((x) => x.isNew).length}語</p></div><button class="primary-btn" ${state.placement?.result ? 'data-start="daily"' : 'data-action="placement-open"'}>${state.placement?.result ? "学習スタート" : "レベルチェックを始める"} ${icons.arrow}</button></section><div class="stage-home-links"><button data-nav="capsule">${icons.gift}<strong>星のアトリエ</strong><span>学習コインでガチャ</span></button><button data-nav="duel">${icons.spark}<strong>ワードスプリント</strong><span>60秒の単語対戦</span></button></div><section class="stage-path" aria-label="学習ステージ"><header><h2>ステージ</h2><p>完了 ${state.completedLessons.length} / ${TangoProgress.count(vocab)} · 今日 ${done}問</p></header>${renderStages()}</section><p class="lexora-data-notice">出題改善のため学習履歴を収集します。<a href="privacy.html">データの取り扱い</a></p></main>`;
 }
-function renderStages(){const route=courseRoute(),front=currentLesson(),pos=route.indexOf(front),page=Math.max(0,Math.min(Math.floor((pos<0?route.length-1:pos)/10),Number(state.ui.stagePage??Math.floor(Math.max(0,pos)/10))));const visible=route.slice(page*10,page*10+10);return `<div class="stage-chapter"><span>チャプター ${page+1}</span><div class="stage-road">${visible.map((index,i)=>{const done=state.completedLessons.includes(index),open=isUnlocked(index),current=index===front,n=page*10+i+1;return `<div class="stage-stop ${done?'done':current?'current':'locked'}" style="--bend:${[0,1,1,0,-1,-1,0,1,0,-1][i]}"><button ${open&&state.placement?.result?'data-start="unit-'+(index+1)+'"':'disabled'} aria-label="ステージ ${n}${done?' 完了':current?' 学習する':' 未解放'}">${done?icons.check:open?n:icons.lock}</button><strong>${n}</strong><small>${done?'完了':current?'ここから': '未解放'}</small></div>`;}).join('')}</div><div class="stage-pagination"><button class="outline-btn" data-stage-page="${page-1}" ${page===0?'disabled':''}>前へ</button><span>${page+1} / ${Math.ceil(route.length/10)}</span><button class="outline-btn" data-stage-page="${page+1}" ${(page+1)*10>=route.length||page>=Math.floor((pos<0?route.length-1:pos)/10)?'disabled':''}>次へ</button></div></div>`;}
-function renderPath(){return renderHome();}
+function renderStages() {
+  const route = courseRoute(),
+    front = currentLesson(),
+    pos = route.indexOf(front),
+    page = Math.max(
+      0,
+      Math.min(
+        Math.floor((pos < 0 ? route.length - 1 : pos) / 10),
+        Number(state.ui.stagePage ?? Math.floor(Math.max(0, pos) / 10)),
+      ),
+    );
+  const visible = route.slice(page * 10, page * 10 + 10);
+  return `<div class="stage-chapter"><span>チャプター ${page + 1}</span><div class="stage-road">${visible
+    .map((index, i) => {
+      const done = state.completedLessons.includes(index),
+        open = isUnlocked(index),
+        current = index === front,
+        n = page * 10 + i + 1;
+      return `<div class="stage-stop ${done ? "done" : current ? "current" : "locked"}" style="--bend:${[0, 1, 1, 0, -1, -1, 0, 1, 0, -1][i]}"><button ${open && state.placement?.result ? 'data-start="unit-' + (index + 1) + '"' : "disabled"} aria-label="ステージ ${n}${done ? " 完了" : current ? " 学習する" : " 未解放"}">${done ? icons.check : open ? n : icons.lock}</button><strong>${n}</strong><small>${done ? "完了" : current ? "ここから" : "未解放"}</small></div>`;
+    })
+    .join(
+      "",
+    )}</div><div class="stage-pagination"><button class="outline-btn" data-stage-page="${page - 1}" ${page === 0 ? "disabled" : ""}>前へ</button><span>${page + 1} / ${Math.ceil(route.length / 10)}</span><button class="outline-btn" data-stage-page="${page + 1}" ${(page + 1) * 10 >= route.length || page >= Math.floor((pos < 0 ? route.length - 1 : pos) / 10) ? "disabled" : ""}>次へ</button></div></div>`;
+}
+function renderPath() {
+  return renderHome();
+}
 function renderProfileEditor() {
   if (!profileDraft)
     profileDraft = {
@@ -1006,13 +1038,18 @@ function renderApp() {
         ? LexoraDuel.render()
         : active === "home"
           ? renderHome()
-          : active === "ranking" ? KotomiaRanking.render() : active === "capsule" ? renderAtelier() : renderHome();
+          : active === "ranking"
+            ? KotomiaRanking.render()
+            : active === "capsule"
+              ? renderAtelier()
+              : renderHome();
   app.innerHTML = `<div class="app-shell">${active === "placement" ? "" : statusBarHtml()}${main}${active === "placement" ? "" : navHtml(active)}${renderModal()}</div>`;
   document.body.classList.remove("chrome-compact");
   document.body.dataset.screen = active;
-  if(active==="ranking")KotomiaRanking.mount();else KotomiaRanking.unmount();
+  if (active === "ranking") KotomiaRanking.mount();
+  else KotomiaRanking.unmount();
   window.KotomiaFeed?.dispose();
-  document.body.dataset.collectible=state.equippedBadges[0]||"";
+  document.body.dataset.collectible = state.equippedBadges[0] || "";
   if (active === "duel") LexoraDuel.mount();
   else window.LexoraDuel?.unmount();
   if (state.ui.modal && !previousModal) {
@@ -1193,7 +1230,7 @@ function renderLearning() {
     ? ""
     : `<aside class="action-rail" aria-label="学習アクション"><div class="action-stack"><button class="action-orb" data-learn-action="pronounce" aria-label="発音">${icons.volume}</button><span>発音</span></div><div class="action-stack"><button class="action-orb ${saved ? "active" : ""}" data-learn-action="save" aria-label="保存">${icons.bookmark}</button><span>保存</span></div><div class="action-stack"><button class="action-orb ${difficult ? "active" : ""}" data-learn-action="difficult" aria-label="苦手">${icons.flag}</button><span>苦手</span></div><div class="action-stack"><button class="action-orb" data-learn-action="skip" aria-label="スキップ">${icons.skip}</button><span>スキップ</span></div><div class="action-stack"><button class="action-orb ${learning.auto ? "active" : ""}" data-learn-action="auto" aria-label="自動">${icons.auto}</button><span>自動</span></div></aside>`;
   document.body.dataset.screen = "learn";
-  app.innerHTML = `<div class="app-shell learn-screen"><main class="screen learn-screen"><header class="learn-top"><button class="icon-btn" data-action="exit-learn" aria-label="学習を終了">${icons.close}</button><div class="learn-progress"><small>${lessonLabel}</small><div class="progress-rail"><div class="progress-bar" style="--progress:${progress}%"></div></div><span class="question-mode-label">${test ? (questionMode() === "study" ? "単語を確認" : questionMode() === "spelling" ? "英単語を書く" : "意味を選ぶ") : "意味を思い出す"}</span></div><span class="short-hp" aria-label="HP ${state.hp}">${icons.heart}<b>${state.hp}</b></span></header><div class="learn-meta"><span>${questionMode() === "study" ? "新しい単語を確認" : "覚えた単語を復習"}</span><span class="combo">${state.combo ? `${state.combo} COMBO` : ""}</span></div>${state.fever ? `<div class="fever-banner show" id="fever">${icons.spark} FEVER · XP ×2 · ${state.feverSeconds || 20}s</div>` : ""}<div class="study-feed" tabindex="0" aria-label="縦にスクロールする問題カード">${learning.index>0?'<article class="feed-page feed-history"><span>前の単語 · 閲覧のみ</span><h2>'+escapeHTML(learning.words[learning.index-1].word)+'</h2><p>'+escapeHTML(learning.words[learning.index-1].meaning)+'</p><small>下へスクロールして現在の問題へ</small></article>':''}<article class="feed-page" data-feed-current><div class="word-stage ${test?'test-stage':''}" id="word-stage">${wordStage}</div><div class="feed-actions"><button class="text-link" data-learn-action="pronounce">発音</button><button class="text-link" data-learn-action="skip">スキップ</button></div><p class="feed-hint">↑ スクロールで次の問題へ · 未回答は採点されません</p></article><article class="feed-page feed-next" data-feed-next><span>次の問題へ</span><strong>↑</strong><p>未回答の単語はあとで復習できます</p></article></div></main></div>`;
+  app.innerHTML = `<div class="app-shell learn-screen"><main class="screen learn-screen"><header class="learn-top"><button class="icon-btn" data-action="exit-learn" aria-label="学習を終了">${icons.close}</button><div class="learn-progress"><small>${lessonLabel}</small><div class="progress-rail"><div class="progress-bar" style="--progress:${progress}%"></div></div><span class="question-mode-label">${test ? (questionMode() === "study" ? "単語を確認" : questionMode() === "spelling" ? "英単語を書く" : "意味を選ぶ") : "意味を思い出す"}</span></div><span class="short-hp" aria-label="HP ${state.hp}">${icons.heart}<b>${state.hp}</b></span></header><div class="learn-meta"><span>${questionMode() === "study" ? "新しい単語を確認" : "覚えた単語を復習"}</span><span class="combo">${state.combo ? `${state.combo} COMBO` : ""}</span></div>${state.fever ? `<div class="fever-banner show" id="fever">${icons.spark} FEVER · XP ×2 · ${state.feverSeconds || 20}s</div>` : ""}<div class="study-feed" tabindex="0" aria-label="縦にスクロールする問題カード">${learning.index > 0 ? '<article class="feed-page feed-history"><span>前の単語 · 閲覧のみ</span><h2>' + escapeHTML(learning.words[learning.index - 1].word) + "</h2><p>" + escapeHTML(learning.words[learning.index - 1].meaning) + "</p><small>下へスクロールして現在の問題へ</small></article>" : ""}<article class="feed-page" data-feed-current><span class="feed-position">${learning.index + 1} / ${learning.words.length}</span><div class="word-stage ${test ? "test-stage" : ""}" id="word-stage">${wordStage}</div><div class="feed-actions"><button class="text-link" data-learn-action="pronounce">発音</button><button class="text-link" data-learn-action="skip">スキップ</button></div><p class="feed-hint">↑ スクロールで次の問題へ · 未回答は採点されません</p></article><article class="feed-page feed-next" data-feed-next><span>次の問題へ</span><strong>↑</strong><p>未回答の単語はあとで復習できます</p></article></div></main></div>`;
   persist();
   setupLearningEvents();
   if (learning.keyboardAnswer) {
@@ -1214,7 +1251,9 @@ function renderQuickTest(word) {
     return `<section class="quick-test"><h2>${escapeHTML(word.word)}</h2><p>この単語に合う意味は？</p><div class="answers">${word.options.map((meaning, i) => `<button class="answer-btn" data-test-answer="${i}"><span>${letters[i]}</span><strong>${escapeHTML(meaning)}</strong></button>`).join("")}</div><button class="test-dont-know" data-action="dont-know">わからない</button><div id="test-result" class="test-result" aria-live="polite"></div></section>`;
   if (mode === "spelling")
     return `<section class="quick-test spelling-test"><div class="test-label">WRITE IT</div><h2 class="spelling-prompt">${word.meaning}</h2><p>英単語を入力して答えよう</p><form id="spelling-form" autocomplete="off"><label class="visually-hidden" for="spelling-answer">英単語</label><input id="spelling-answer" name="answer" type="text" autocapitalize="none" spellcheck="false" autocomplete="off" placeholder="英単語を入力" required /><button class="primary-btn spelling-submit" type="submit">答えを確認</button></form><button class="test-dont-know" data-action="dont-know">わからない</button><div id="test-result" class="test-result" aria-live="polite"></div></section>`;
-  const options = learning.englishOptions[learning.index]?.length ? learning.englishOptions[learning.index] : (learning.englishOptions[learning.index] = makeEnglishOptions(word));
+  const options = learning.englishOptions[learning.index]?.length
+    ? learning.englishOptions[learning.index]
+    : (learning.englishOptions[learning.index] = makeEnglishOptions(word));
   return `<section class="quick-test meaning-select-test"><div class="test-label">日本語から選ぶ</div><h2 class="meaning-prompt">${escapeHTML(word.meaning)}</h2><p>この意味に合う英単語は？</p><div class="answers">${options.map((option, i) => `<button class="answer-btn" data-test-answer="${i}"><span class="answer-letter">${letters[i]}</span><strong>${escapeHTML(option.word)}</strong></button>`).join("")}</div><button class="test-dont-know" data-action="dont-know">わからない</button><div id="test-result" class="test-result" aria-live="polite"></div></section>`;
 }
 function renderSwipeIntro() {
@@ -1227,9 +1266,21 @@ function dismissSwipeIntro() {
   }
   document.querySelector(".swipe-intro")?.remove();
 }
-function setupLearningEvents(){
- const card=document.getElementById('word-card');card?.addEventListener('click',()=>{if(!learning?.revealed)revealCurrent();});card?.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();revealCurrent();}});
- KotomiaFeed.mount(document.querySelector('.study-feed'),()=>{if(!learning||learning.testAnswered||learning.answerPending)return;learnAction('skip');});
+function setupLearningEvents() {
+  const card = document.getElementById("word-card");
+  card?.addEventListener("click", () => {
+    if (!learning?.revealed) revealCurrent();
+  });
+  card?.addEventListener("keydown", (e) => {
+    if (["Enter", " "].includes(e.key)) {
+      e.preventDefault();
+      revealCurrent();
+    }
+  });
+  KotomiaFeed.mount(document.querySelector(".study-feed"), () => {
+    if (!learning || learning.testAnswered || learning.answerPending) return;
+    learnAction("skip");
+  });
 }
 function revealCurrent() {
   if (!learning || learning.revealed || isTest()) return;
@@ -1428,12 +1479,19 @@ function testAnswer(choice) {
   if (!learning || learning.testAnswered) return;
   const word = currentWord();
   const mode = questionMode();
-  const selectedOptions=mode==="meaning-select"?word.options:learning.englishOptions[learning.index];
-  const correct = mode==="meaning-select"?selectedOptions[choice]===word.meaning:selectedOptions[choice]?.id===word.id;
+  const selectedOptions =
+    mode === "meaning-select" ? word.options : learning.englishOptions[learning.index];
+  const correct =
+    mode === "meaning-select"
+      ? selectedOptions[choice] === word.meaning
+      : selectedOptions[choice]?.id === word.id;
   learning.testAnswered = true;
   document.querySelectorAll("[data-test-answer]").forEach((btn) => {
     const index = Number(btn.dataset.testAnswer);
-    const isCorrect = mode==="meaning-select"?selectedOptions[index]===word.meaning:selectedOptions[index]?.id===word.id;
+    const isCorrect =
+      mode === "meaning-select"
+        ? selectedOptions[index] === word.meaning
+        : selectedOptions[index]?.id === word.id;
     btn.disabled = true;
     if (isCorrect) btn.classList.add("correct");
     else if (index === choice) btn.classList.add("wrong");
@@ -1510,7 +1568,7 @@ function finishLearning() {
   const automaticLesson = learning.id === "daily";
   const fromAdventure = false;
   const hadAnswers = (learning.answeredIds || []).length > 0;
-  const finishedAll = learning.initialIds.every(id=>(learning.answeredIds||[]).includes(id));
+  const finishedAll = learning.initialIds.every((id) => (learning.answeredIds || []).includes(id));
   const completedIndex = learning.lessonIndex;
   const beforeCompleted = [...state.completedLessons];
   if (hadAnswers)
@@ -1569,7 +1627,6 @@ function finishLearning() {
   learning = null;
   persist();
   renderApp();
-
 }
 function learnAction(action) {
   if (!learning) return;
@@ -1599,6 +1656,7 @@ function learnAction(action) {
     renderLearning();
   }
   if (action === "skip") {
+    if (learning.testAnswered || learning.answerPending) return;
     toast("スキップしました。あとでまた出会えます。", "normal");
     learning.index += 1;
     learning.testAnswered = false;
@@ -1616,7 +1674,8 @@ function learnAction(action) {
 }
 let capsuleLastResults = [];
 function useCapsule(count = 1) {
-  if (state.ui.view!=="capsule" && !["capsule-menu", "capsule-info"].includes(state.ui.modal)) return;
+  if (state.ui.view !== "capsule" && !["capsule-menu", "capsule-info"].includes(state.ui.modal))
+    return;
   const result = TangoGacha.draw(state, count);
   if (!result.ok) {
     toast(
@@ -1689,8 +1748,20 @@ function badgeArt(id) {
   const glyph = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${shapes[Math.max(0, index)]}</svg>`;
   return `<span class="badge-art badge-art-${Math.max(0, index)}">${glyph}</span>`;
 }
-function renderAtelier(){const g=TangoGacha.normalize(state.gacha);return `<main class="screen atelier-screen"><header class="feature-heading"><span>学習で集めて、自分らしく</span><h1>星のアトリエ</h1><p>集めたバッジをプロフィールと背景に飾ろう。</p></header><section class="atelier-machine"><div class="atelier-orbit" aria-hidden="true"><span>✦</span><i></i><i></i><i></i></div><div class="atelier-balance">${icons.coin}<b>${state.coin}</b><span>学習コイン</span></div><p>10回目は未所持バッジ確定 · あと${10-g.cycle}回</p><div class="atelier-pity" aria-label="確定バッジまでの進捗">${Array.from({length:10},(_,i)=>'<i class="'+(i<g.cycle?'lit':'')+'"></i>').join('')}</div><div class="atelier-draw"><button class="primary-btn" data-action="capsule-draw" ${state.coin<100?'disabled':''}>1回開く <small>100コイン</small></button><button class="outline-btn" data-action="capsule-five" ${state.coin<500?'disabled':''}>5回開く <small>500コイン</small></button></div><small>学習で獲得する仮想コインのみ。${state.coin<100?'学習してコインを集めよう。':''}</small></section><section class="atelier-album"><h2>バッジアルバム</h2><p>獲得したバッジを選ぶと背景も変化します。</p><div class="album-grid">${TangoGacha.rewards.map(r=>{const owned=state.ownedBadges.includes(r.id);return `<button data-equip-badge="${r.id}" ${owned?'':'disabled'} class="album-badge ${state.equippedBadges.includes(r.id)?'equipped':''}" aria-label="${escapeHTML(r.name)} ${owned?'装備する':'未獲得'}">${badgeArt(r.id)}<strong>${escapeHTML(r.name)}</strong><small>${owned?(state.equippedBadges.includes(r.id)?'装備中':'獲得済み'):'未獲得'}</small></button>`;}).join('')}</div></section><details class="atelier-details"><summary>確率・重複・履歴</summary><p>通常の抽選確率。10回目は未所持バッジから均等に抽選します。全所持後は重複分をコインに交換します。</p>${TangoGacha.rewards.map(r=>'<p>'+escapeHTML(r.name)+' · '+r.weight+'%</p>').join('')}<p>重複：R 25 / SR 40 / SSR 75コインに交換。</p><h3>直近の履歴 · 全${g.total}回</h3>${g.history.map(r=>'<p>'+escapeHTML(r.name)+' · '+escapeHTML(r.effect)+'</p>').join('')||'<p>まだ引いていません。</p>'}</details></main>`;}
-function renderCapsuleMenu(){return `<div class="modal-backdrop" data-close-modal><section class="modal" role="dialog" aria-modal="true" aria-label="ガチャ"><h2>星のアトリエ</h2><button class="primary-btn" data-nav="capsule">ガチャへ</button><button class="text-link" data-action="close-modal">閉じる</button></section></div>`;}
+function renderAtelier() {
+  const g = TangoGacha.normalize(state.gacha);
+  return `<main class="screen atelier-screen"><header class="feature-heading"><span>学習で集めて、自分らしく</span><h1>星のアトリエ</h1><p>集めたバッジをプロフィールと背景に飾ろう。</p></header><section class="atelier-machine"><div class="atelier-orbit" aria-hidden="true"><span>✦</span><i></i><i></i><i></i></div><div class="atelier-balance">${icons.coin}<b>${state.coin}</b><span>学習コイン</span></div><p>10回目は未所持バッジ確定 · あと${10 - g.cycle}回</p><div class="atelier-pity" aria-label="確定バッジまでの進捗">${Array.from({ length: 10 }, (_, i) => '<i class="' + (i < g.cycle ? "lit" : "") + '"></i>').join("")}</div><div class="atelier-draw"><button class="primary-btn" data-action="capsule-draw" ${state.coin < 100 ? "disabled" : ""}>1回開く <small>100コイン</small></button><button class="outline-btn" data-action="capsule-five" ${state.coin < 500 ? "disabled" : ""}>5回開く <small>500コイン</small></button></div><small>学習で獲得する仮想コインのみ。${state.coin < 100 ? "学習してコインを集めよう。" : ""}</small></section><section class="atelier-album"><h2>バッジアルバム</h2><p>獲得したバッジを選ぶと背景も変化します。</p><div class="album-grid">${TangoGacha.rewards
+    .map((r) => {
+      const owned = state.ownedBadges.includes(r.id);
+      return `<button data-equip-badge="${r.id}" ${owned ? "" : "disabled"} class="album-badge ${state.equippedBadges.includes(r.id) ? "equipped" : ""}" aria-label="${escapeHTML(r.name)} ${owned ? "装備する" : "未獲得"}">${badgeArt(r.id)}<strong>${escapeHTML(r.name)}</strong><small>${owned ? (state.equippedBadges.includes(r.id) ? "装備中" : "獲得済み") : "未獲得"}</small></button>`;
+    })
+    .join(
+      "",
+    )}</div></section><details class="atelier-details"><summary>確率・重複・履歴</summary><p>通常の抽選確率。10回目は未所持バッジから均等に抽選します。全所持後は重複分をコインに交換します。</p>${TangoGacha.rewards.map((r) => "<p>" + escapeHTML(r.name) + " · " + r.weight + "%</p>").join("")}<p>重複：R 25 / SR 40 / SSR 75コインに交換。</p><h3>直近の履歴 · 全${g.total}回</h3>${g.history.map((r) => "<p>" + escapeHTML(r.name) + " · " + escapeHTML(r.effect) + "</p>").join("") || "<p>まだ引いていません。</p>"}</details></main>`;
+}
+function renderCapsuleMenu() {
+  return `<div class="modal-backdrop" data-close-modal><section class="modal" role="dialog" aria-modal="true" aria-label="ガチャ"><h2>星のアトリエ</h2><button class="primary-btn" data-nav="capsule">ガチャへ</button><button class="text-link" data-action="close-modal">閉じる</button></section></div>`;
+}
 function renderCapsuleResult() {
   const results = capsuleLastResults.length ? capsuleLastResults : state.gacha.history.slice(0, 1);
   return `<div class="modal-backdrop" data-close-modal><section class="modal capsule-result gacha-result" role="dialog" aria-modal="true" aria-labelledby="gacha-result-title"><div class="modal-head"><h2 id="gacha-result-title">獲得したバッジ</h2><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></div><div class="gacha-results ${results.length === 1 ? "single" : ""}">${results.map((r, i) => `<article class="gacha-reward rarity-border-${r.rarity}" style="--reveal:${i}"><span class="rarity rarity-${r.rarity}">${escapeHTML(r.rarity)}</span>${rewardIcon(r)}${r.kind === "badge" && !r.duplicate ? '<span class="gacha-new">NEW</span>' : ""}<h3>${escapeHTML(r.name)}</h3><p>${escapeHTML(r.effect || "")}</p>${r.guaranteed ? '<small class="gacha-guaranteed">10回目の確定バッジ</small>' : ""}</article>`).join("")}</div><p class="gacha-result-balance">${icons.coin} 残り ${state.coin}コイン</p><button class="primary-btn" data-nav="capsule">祠に戻る ${icons.arrow}</button>${results.some((r) => r.kind === "badge" && !r.duplicate) ? `<button class="text-link" data-action="gacha-profile">${icons.edit} プロフィールに装備する</button>` : ""}</section></div>`;
@@ -1828,8 +1899,20 @@ window.addEventListener("click", (event) => {
     renderApp();
     return;
   }
-  if(target.dataset.stagePage!==undefined){state.ui.stagePage=Math.max(0,Number(target.dataset.stagePage)||0);renderApp();return;}
-  if(target.dataset.equipBadge){const id=target.dataset.equipBadge;if(state.ownedBadges.includes(id)){state.equippedBadges=[id];persist();renderApp();}return;}
+  if (target.dataset.stagePage !== undefined) {
+    state.ui.stagePage = Math.max(0, Number(target.dataset.stagePage) || 0);
+    renderApp();
+    return;
+  }
+  if (target.dataset.equipBadge) {
+    const id = target.dataset.equipBadge;
+    if (state.ownedBadges.includes(id)) {
+      state.equippedBadges = [id];
+      persist();
+      renderApp();
+    }
+    return;
+  }
   if (target.dataset.nav) {
     const requested = target.dataset.nav;
     state.ui.view = ["home", "duel", "ranking", "capsule"].includes(requested) ? requested : "home";

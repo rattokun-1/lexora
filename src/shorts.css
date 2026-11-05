@@ -506,3 +506,17 @@ body .shorts-feed {
     animation: none !important;
   }
 }
+/* Override the older quiz stylesheet's muted text on the dark learning surface. */
+body .shorts-feed .short-unknown {
+  color: #d4e4db !important;
+  background: transparent !important;
+  min-height: 44px;
+  margin: 6px auto 0;
+  border: 0;
+}
+body .shorts-feed .short-unknown:hover:not(:disabled) {
+  color: #fffdf4 !important;
+}
+body .shorts-feed .short-unknown:disabled {
+  color: #a8c6b8 !important;
+}

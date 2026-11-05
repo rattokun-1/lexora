@@ -1185,7 +1185,7 @@ function startLearning(id) {
     id,
     sessionId: crypto.randomUUID(),
     lessonIndex,
-    words,
+    words: words.map((word) => ({ ...word, options: KotomiaChoices.shuffle(word.options) })),
     index: 0,
     revealed: false,
     testAnswered: false,
@@ -1246,6 +1246,9 @@ function renderShortQuestion(index, preview = false) {
       "meaning-select": "意味を選ぶ",
     }[mode] || "英単語を選ぶ";
   const title = ["spelling", "english-select"].includes(mode) ? word.meaning : word.word;
+  learning.presented = learning.presented || {};
+  const entering = !preview && !learning.presented[index];
+  if (!preview) learning.presented[index] = true;
   let answers = "";
   if (mode === "study")
     answers = `<p class="short-meaning">${escapeHTML(word.meaning)}</p><button class="short-primary" data-learn-action="study-next" ${disabled}>${result ? "確認済み" : "確認した"}</button>`;
@@ -1269,7 +1272,7 @@ function renderShortQuestion(index, preview = false) {
         .map((option, i) => {
           const correct =
             mode === "meaning-select" ? option === word.meaning : option.id === word.id;
-          return `<button class="short-option ${result && correct ? "correct" : result && result.choice === i ? "wrong" : ""}" data-test-answer="${i}" ${disabled}><span>${String.fromCharCode(65 + i)}</span><strong>${escapeHTML(mode === "meaning-select" ? option : option.word)}</strong>${result && correct ? icons.check : ""}</button>`;
+          return `<button class="short-option ${result && correct ? "correct" : result && result.choice === i ? "wrong" : ""}" data-test-answer="${i}" style="--choice-order:${i}" ${disabled}><span>${String.fromCharCode(65 + i)}</span><strong>${escapeHTML(mode === "meaning-select" ? option : option.word)}</strong>${result && correct ? icons.check : ""}</button>`;
         })
         .join("") +
       "</div>";
@@ -1278,7 +1281,7 @@ function renderShortQuestion(index, preview = false) {
     answers += `<button class="short-unknown test-dont-know" data-action="dont-know" ${disabled}>わからない</button>`;
   const saved = state.savedWords.includes(word.id),
     difficult = state.difficultWords.includes(word.id);
-  let html = `<article class="feed-page short-page" ${preview ? 'data-feed-next inert aria-hidden="true"' : "data-feed-current"} style="--short-tone:${index % 2 ? "#163b48" : "#123f36"}"><div class="short-scene"><span class="short-mode">${label}</span><h2>${escapeHTML(title)}</h2><p class="short-pronunciation">${["study", "recall", "meaning-select"].includes(mode) ? escapeHTML(word.kana) : ""}</p><aside class="short-rail" aria-label="単語の操作"><button data-learn-action="pronounce" aria-label="発音を聞く" ${preview ? "disabled" : ""}>${icons.volume}<small>発音</small></button><button data-learn-action="save" aria-label="単語を保存" aria-pressed="${saved}" ${preview ? "disabled" : ""}>${icons.bookmark}<small>保存</small></button><button data-learn-action="difficult" aria-label="苦手に登録" aria-pressed="${difficult}" ${preview ? "disabled" : ""}>${icons.flag}<small>苦手</small></button></aside></div><section class="short-bottom" aria-label="解答"><div id="test-result" class="short-feedback ${result?.known ? "good" : result && !result.study ? "bad" : ""}" aria-live="polite">${result ? (result.study ? "確認しました" : result.known ? "正解！" : "正解：" + escapeHTML(["spelling", "english-select"].includes(mode) ? word.word : word.meaning)) : ""}</div>${answers}<div class="short-next-row"><span class="short-swipe-hint">${result ? "上にスワイプして次へ" : "↑ 上にスワイプでスキップ"}</span><button class="short-next" data-learn-action="next" aria-label="${index + 1 === learning.words.length ? "学習結果へ" : "次の問題へ"}" ${preview ? "disabled" : ""}>↑</button></div></section></article>`;
+  let html = `<article class="feed-page short-page ${entering ? "is-entering" : ""}" ${preview ? 'data-feed-next inert aria-hidden="true"' : "data-feed-current"} style="--short-tone:${index % 2 ? "#163b48" : "#123f36"}">${preview ? '<span class="short-preview-label">次の単語 · ' + escapeHTML(title) + "</span>" : ""}<div class="short-scene"><span class="short-mode">${label}</span><h2 style="--short-word-size:${Math.max(28, Math.min(72, 620 / Math.max(6, title.length)))}px">${escapeHTML(title)}</h2><p class="short-pronunciation">${["study", "recall", "meaning-select"].includes(mode) ? escapeHTML(word.kana) : ""}</p></div><aside class="short-rail" aria-label="単語の操作"><button data-learn-action="pronounce" aria-label="発音を聞く" ${preview ? "disabled" : ""}>${icons.volume}<small>発音</small></button><button data-learn-action="save" aria-label="単語を保存" aria-pressed="${saved}" ${preview ? "disabled" : ""}>${icons.bookmark}<small>保存</small></button><button data-learn-action="difficult" aria-label="苦手に登録" aria-pressed="${difficult}" ${preview ? "disabled" : ""}>${icons.flag}<small>苦手</small></button></aside><section class="short-bottom" aria-label="解答"><div id="test-result" class="short-feedback ${result?.known ? "good" : result && !result.study ? "bad" : ""}" aria-live="polite">${result ? (result.study ? "確認しました" : result.known ? "正解！" : "正解：" + escapeHTML(["spelling", "english-select"].includes(mode) ? word.word : word.meaning)) : ""}</div>${answers}<button class="short-next-accessible" data-learn-action="next" ${preview ? "disabled" : ""}>${index + 1 === learning.words.length ? "学習結果へ" : "次の問題へ"}</button></section></article>`;
   if (preview)
     html = html
       .replace(/ id="[^"]*"/g, "")
@@ -1322,10 +1325,20 @@ function setupLearningEvents() {
       revealCurrent();
     }
   });
-  KotomiaFeed.mount(document.querySelector(".study-feed"), () => {
-    if (!learning || learning.answerPending) return;
-    nextLearningQuestion();
-  });
+  KotomiaFeed.mount(
+    document.querySelector(".study-feed"),
+    () => {
+      if (!learning || learning.answerPending) return;
+      nextLearningQuestion();
+    },
+    {
+      intro: !state.settings.shortsIntroV3Seen,
+      onIntroSeen: () => {
+        state.settings.shortsIntroV3Seen = true;
+        persist();
+      },
+    },
+  );
 }
 function revealCurrent() {
   if (!learning || learning.revealed || isTest()) return;

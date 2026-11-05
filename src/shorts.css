@@ -520,3 +520,167 @@ body .shorts-feed .short-unknown:hover:not(:disabled) {
 body .shorts-feed .short-unknown:disabled {
   color: #a8c6b8 !important;
 }
+/* Thumb reach, floating chrome and a single, non-scoring first-use peek. */
+body .shorts-header {
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 500px;
+  height: 54px;
+  border: 1px solid #dae9dc38;
+  border-radius: 29px;
+  background: #183b34bd;
+  box-shadow:
+    0 8px 28px #0000001f,
+    inset 0 1px #ffffff14;
+  padding: 0 9px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+body .shorts-header .short-close {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: #ffffff08;
+}
+body .shorts-header .shorts-progress {
+  margin-right: 10px;
+}
+body .shorts-feed {
+  margin-top: 0 !important;
+  height: 100dvh !important;
+}
+.shorts-feed .short-scene {
+  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-right: 82px;
+  padding-bottom: 45px;
+}
+.shorts-feed .short-scene h2 {
+  font-size: min(var(--short-word-size, 72px), 15vw);
+  line-height: 1.18;
+}
+.shorts-feed .short-rail {
+  top: auto;
+  bottom: calc(var(--short-answer-height, 280px) + 14px);
+  right: 12px;
+  transform: none;
+  gap: 12px;
+}
+.shorts-feed .short-rail button {
+  min-height: 49px;
+  min-width: 48px;
+}
+.shorts-feed .short-bottom {
+  padding-bottom: max(22px, env(safe-area-inset-bottom));
+  padding-top: 8px;
+}
+body .shorts-feed .short-unknown {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 12px 0 0;
+  border: 1px solid #dcebe750 !important;
+  border-radius: 14px;
+  background: #ffffff08 !important;
+  color: #e6eee7 !important;
+  font-weight: 600;
+  padding: 10px 14px;
+}
+.shorts-feed .short-feedback {
+  min-height: 25px;
+}
+.shorts-feed .short-options {
+  margin-top: 4px;
+}
+.short-next-accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  padding: 0;
+  border: 0;
+}
+.short-next-accessible:focus-visible {
+  width: auto;
+  height: auto;
+  min-height: 44px;
+  clip-path: none;
+  z-index: 12;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: #e6eddf;
+  color: #173c30;
+  border-radius: 14px;
+}
+.short-preview-label {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d4e7dc;
+}
+.short-page.is-entering .short-option {
+  animation: short-choice-in 0.22s both;
+  animation-delay: calc(var(--choice-order, 0) * 35ms);
+}
+@keyframes short-choice-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.shorts-feed.is-peeking::after {
+  content: "上にスワイプして次の単語へ";
+  position: fixed;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  z-index: 9;
+  text-align: center;
+  color: #d5e5d8;
+  font-size: 11px;
+  pointer-events: none;
+}
+@media (max-height: 680px) {
+  .shorts-feed .short-scene {
+    min-height: 125px;
+    padding-top: 74px;
+    padding-bottom: 20px;
+  }
+  .shorts-feed .short-scene h2 {
+    font-size: min(var(--short-word-size, 48px), 12vw, 48px);
+  }
+  .shorts-feed .short-rail {
+    gap: 4px;
+    bottom: calc(var(--short-answer-height, 250px) + 7px);
+  }
+  .shorts-feed .short-rail button {
+    min-height: 44px;
+  }
+  .shorts-feed .short-bottom {
+    padding-bottom: 14px;
+  }
+  .shorts-feed .short-feedback {
+    min-height: 20px;
+  }
+  body .shorts-feed .short-unknown {
+    min-height: 44px;
+    margin-top: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .short-page.is-entering .short-option {
+    animation: none !important;
+  }
+}

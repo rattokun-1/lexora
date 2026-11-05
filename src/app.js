@@ -1691,7 +1691,7 @@ function learnAction(action) {
     state[key] = on ? item.filter((id) => id !== word.id) : [...item, word.id];
     if (!on) {
       state.daily.saved += 1;
-      toast(action === "save" ? "保存しました。" : "苦手リストに入れました。", "good");
+      haptic(8);
     }
     persist();
     renderLearning();

@@ -57,7 +57,7 @@ test("treasure is optional, proximity-gated, and cannot be claimed twice", () =>
   assert.equal(A.claim(s, "snow-chest"), null);
   assert.equal(A.nearby(s.position, s).kind, "chest");
 });
-test("lesson completion advances exploration and returns to the world; skipped lessons do not", () => {
+test("lesson completion returns to stages without modifying retired travel progress", () => {
   const app = fs.readFileSync(path.join(__dirname, "../src/app.js"), "utf8"),
     code = app.slice(
       app.indexOf("function finishLearning()"),
@@ -103,8 +103,8 @@ test("lesson completion advances exploration and returns to the world; skipped l
     return ctx;
   }
   const done = run(["a", "b"]);
-  assert.equal(done.state.adventure.completed, 1);
-  assert.equal(done.state.ui.view, "path");
+  assert.equal(done.state.adventure.completed, 0);
+  assert.equal(done.state.ui.view, "home");
   assert.equal(run(["a"]).state.adventure.completed, 0);
 });
 test("wide meadows support off-trail exploration while gates control region crossings", () => {

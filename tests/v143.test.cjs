@@ -114,7 +114,7 @@ test("feed scroll advances once and never calls any scoring API", () => {
   context.window.KotomiaFeed.mount(host, () => nextCalls++);
   assert.equal(host.scrollTop, 100);
   frames.shift()();
-  host.scrollTop = 190;
+  host.scrollTop = 200;
   listeners.scroll();
   frames.shift()();
   listeners.scroll();

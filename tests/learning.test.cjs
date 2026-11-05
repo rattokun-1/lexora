@@ -128,7 +128,8 @@ test("study screen queues a check without awarding a correct answer", () => {
   ctx.finishStudy();
   assert.equal(ctx.state.words.one.correct, undefined);
   assert.equal(ctx.learning.questionModes.at(-1), "meaning-select");
-  assert.equal(ctx.learning.index, 1);
+  assert.equal(ctx.learning.index, 0);
+  assert.equal(ctx.learning.responses[0].study, true);
   ctx.format = "meaning-select";
   const selection = ctx.renderQuickTest(word);
   assert(selection.includes("この単語に合う意味は"));

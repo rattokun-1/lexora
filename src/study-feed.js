@@ -19,7 +19,7 @@
       frame = requestAnimationFrame(() => {
         if (!ready) return;
         const next = host.querySelector("[data-feed-next]");
-        if (next && host.scrollTop >= next.offsetTop - host.clientHeight * 0.2) advance();
+        if (next && host.scrollTop >= next.offsetTop - 2) advance();
       });
     };
     const key = (e) => {
@@ -32,12 +32,23 @@
         });
       }
     };
-    const readyFrame = requestAnimationFrame(() => (ready = true));
+    let readyFrame = requestAnimationFrame(() => (ready = true));
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => {
+            ready = false;
+            host.scrollTop = active.offsetTop;
+            cancelAnimationFrame(readyFrame);
+            readyFrame = requestAnimationFrame(() => (ready = true));
+          });
+    resizeObserver?.observe(host);
     host.addEventListener("scroll", scroll, { passive: true });
     host.addEventListener("keydown", key);
     dispose = () => {
       cancelAnimationFrame(frame);
       cancelAnimationFrame(readyFrame);
+      resizeObserver?.disconnect();
       host.removeEventListener("scroll", scroll);
       host.removeEventListener("keydown", key);
     };

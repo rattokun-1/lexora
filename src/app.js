@@ -1218,38 +1218,74 @@ function renderLearning() {
   }
   document.body.dataset.theme = state.settings.dark ? "mono" : "light";
   document.body.dataset.colorMode = state.settings.dark ? "dark" : "light";
-  const word = currentWord();
-  const test = isTest();
-  const progress = (learning.index / learning.words.length) * 100;
-  const showSwipeIntro = false;
-  if (showSwipeIntro) state.settings.swipeIntroSeen = true;
-  const saved = state.savedWords.includes(word.id);
-  const difficult = state.difficultWords.includes(word.id);
-  const currentCard = test
-    ? `<div class="current-test-card">${renderQuickTest(word)}</div>`
-    : `<div class="word-card" id="word-card" role="button" tabindex="0" aria-label="単語カード。Enterかスペースで意味を表示。解答はボタンを押してください。"><div class="word-count">QUESTION ${String(learning.index + 1).padStart(2, "0")} / ${learning.words.length}</div><div class="word-english" id="word-text" style="font-size:${wordFontSize(word.word)}px">${word.word}</div><div class="word-phonetic">${word.kana}</div><div class="tap-hint" id="tap-hint">${learning.revealed ? "" : "タップして意味を表示"}</div><div class="translation-wrap ${learning.revealed ? "show" : ""}" id="translation"><div class="translation-label">意味</div><div class="translation">${word.meaning}</div></div></div><div class="recall-controls">${learning.revealed ? `<button class="outline-btn" data-action="recall-forgot">思い出せない</button><button class="primary-btn" data-action="recall-known">思い出せた ${icons.check}</button>` : `<button class="primary-btn" data-action="recall-reveal">意味を確認する</button>`}</div>`;
-  const wordStage = currentCard;
-  const lessonLabel =
-    learning.id === "daily"
-      ? `おすすめ学習 · ${learning.initialIds.length}語`
-      : learning.lessonIndex < 0
-        ? "復習"
-        : `レッスン · ${learning.initialIds.length}語`;
-  const actionRail = test
-    ? ""
-    : `<aside class="action-rail" aria-label="学習アクション"><div class="action-stack"><button class="action-orb" data-learn-action="pronounce" aria-label="発音">${icons.volume}</button><span>発音</span></div><div class="action-stack"><button class="action-orb ${saved ? "active" : ""}" data-learn-action="save" aria-label="保存">${icons.bookmark}</button><span>保存</span></div><div class="action-stack"><button class="action-orb ${difficult ? "active" : ""}" data-learn-action="difficult" aria-label="苦手">${icons.flag}</button><span>苦手</span></div><div class="action-stack"><button class="action-orb" data-learn-action="skip" aria-label="スキップ">${icons.skip}</button><span>スキップ</span></div><div class="action-stack"><button class="action-orb ${learning.auto ? "active" : ""}" data-learn-action="auto" aria-label="自動">${icons.auto}</button><span>自動</span></div></aside>`;
   document.body.dataset.screen = "learn";
-  app.innerHTML = `<div class="app-shell learn-screen"><main class="screen learn-screen"><header class="learn-top"><button class="icon-btn" data-action="exit-learn" aria-label="学習を終了">${icons.close}</button><div class="learn-progress"><small>${lessonLabel}</small><div class="progress-rail"><div class="progress-bar" style="--progress:${progress}%"></div></div><span class="question-mode-label">${test ? (questionMode() === "study" ? "単語を確認" : questionMode() === "spelling" ? "英単語を書く" : "意味を選ぶ") : "意味を思い出す"}</span></div><span class="short-hp" aria-label="HP ${state.hp}">${icons.heart}<b>${state.hp}</b></span></header><div class="learn-meta"><span>${questionMode() === "study" ? "新しい単語を確認" : "覚えた単語を復習"}</span><span class="combo">${state.combo ? `${state.combo} COMBO` : ""}</span></div>${state.fever ? `<div class="fever-banner show" id="fever">${icons.spark} FEVER · XP ×2 · ${state.feverSeconds || 20}s</div>` : ""}<div class="study-feed" tabindex="0" aria-label="縦にスクロールする問題カード">${learning.index > 0 ? '<article class="feed-page feed-history"><span>前の単語 · 閲覧のみ</span><h2>' + escapeHTML(learning.words[learning.index - 1].word) + "</h2><p>" + escapeHTML(learning.words[learning.index - 1].meaning) + "</p><small>下へスクロールして現在の問題へ</small></article>" : ""}<article class="feed-page" data-feed-current><span class="feed-position">${learning.index + 1} / ${learning.words.length}</span><div class="word-stage ${test ? "test-stage" : ""}" id="word-stage">${wordStage}</div><div class="feed-actions"><button class="text-link" data-learn-action="pronounce">発音</button><button class="text-link" data-learn-action="skip">スキップ</button></div><p class="feed-hint">↑ スクロールで次の問題へ · 未回答は採点されません</p></article><article class="feed-page feed-next" data-feed-next><span>次の問題へ</span><strong>↑</strong><p>未回答の単語はあとで復習できます</p></article></div></main></div>`;
+  const index = learning.index,
+    total = learning.words.length,
+    progress = ((index + (learning.responses?.[index] ? 1 : 0)) / total) * 100;
+  app.innerHTML = `<div class="app-shell learn-screen shorts-shell"><main class="screen learn-screen shorts-screen"><header class="shorts-header"><button class="short-close" data-action="exit-learn" aria-label="学習を終了">${icons.close}</button><span aria-label="${total}問中${index + 1}問目">${index + 1}<small> / ${total}</small></span><div class="shorts-progress" role="progressbar" aria-label="学習の進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(progress)}"><i style="width:${progress}%"></i></div></header><div class="study-feed shorts-feed" tabindex="0" aria-label="上下にスクロールする問題">${index > 0 ? renderShortHistory(index - 1) : ""}${renderShortQuestion(index)}${index + 1 < total ? renderShortQuestion(index + 1, true) : '<article class="feed-page short-finish" data-feed-next><div><span>今回の学習</span><h2>ここまでの記録を確認</h2><p>上にスワイプすると学習を終了します</p></div></article>'}</div></main></div>`;
   persist();
   setupLearningEvents();
-  if (learning.keyboardAnswer) {
-    document
-      .querySelector("#word-card, #spelling-answer, .answer-btn")
-      ?.focus({ preventScroll: true });
-    learning.keyboardAnswer = false;
+}
+function renderShortHistory(index) {
+  const word = learning.words[index],
+    r = learning.responses?.[index];
+  return `<article class="feed-page short-page short-history"><div class="short-scene"><span class="short-mode">前の単語 · 閲覧のみ</span><h2>${escapeHTML(word.word)}</h2><p class="short-meaning">${escapeHTML(word.meaning)}</p></div><div class="short-bottom"><p class="short-feedback">${r ? (r.study ? "確認済み" : r.known ? "正解として記録済み" : "復習する単語") : "スキップ · 未採点"}</p><p class="short-swipe-hint">下へスクロールして現在の問題へ</p></div></article>`;
+}
+function renderShortQuestion(index, preview = false) {
+  const word = learning.words[index],
+    mode = learning.questionModes[index] || "recall",
+    result = learning.responses?.[index],
+    locked = preview || Boolean(result),
+    disabled = locked ? "disabled" : "",
+    revealed = index === learning.index && learning.revealed;
+  const label =
+    {
+      study: "新しい単語",
+      recall: "意味を思い出す",
+      spelling: "英単語を書く",
+      "meaning-select": "意味を選ぶ",
+    }[mode] || "英単語を選ぶ";
+  const title = ["spelling", "english-select"].includes(mode) ? word.meaning : word.word;
+  let answers = "";
+  if (mode === "study")
+    answers = `<p class="short-meaning">${escapeHTML(word.meaning)}</p><button class="short-primary" data-learn-action="study-next" ${disabled}>${result ? "確認済み" : "確認した"}</button>`;
+  else if (mode === "recall")
+    answers =
+      revealed || result
+        ? `<p class="short-meaning">${escapeHTML(word.meaning)}</p><div class="short-recall"><button data-action="recall-forgot" ${disabled}>思い出せない</button><button class="short-primary" data-action="recall-known" ${disabled}>思い出せた</button></div>`
+        : `<button class="short-primary" data-action="recall-reveal" ${disabled}>意味を確認する</button>`;
+  else if (mode === "spelling")
+    answers = `<form id="spelling-form" class="short-spelling" autocomplete="off"><label class="visually-hidden" for="spelling-answer">英単語</label><input id="spelling-answer" type="text" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="英単語を入力" value="${escapeHTML(learning.spellingDraft?.[index] || "")}" required ${disabled}/><button class="short-primary spelling-submit" type="submit" ${disabled}>答える</button></form>`;
+  else {
+    const options =
+      mode === "meaning-select"
+        ? word.options
+        : learning.englishOptions[index]?.length
+          ? learning.englishOptions[index]
+          : (learning.englishOptions[index] = makeEnglishOptions(word));
+    answers =
+      '<div class="short-options">' +
+      options
+        .map((option, i) => {
+          const correct =
+            mode === "meaning-select" ? option === word.meaning : option.id === word.id;
+          return `<button class="short-option ${result && correct ? "correct" : result && result.choice === i ? "wrong" : ""}" data-test-answer="${i}" ${disabled}><span>${String.fromCharCode(65 + i)}</span><strong>${escapeHTML(mode === "meaning-select" ? option : option.word)}</strong>${result && correct ? icons.check : ""}</button>`;
+        })
+        .join("") +
+      "</div>";
   }
-  if (showSwipeIntro) swipeIntroTimer = setTimeout(dismissSwipeIntro, 5200);
-  if (learning.auto && !test) scheduleAuto();
+  if (!["study", "recall"].includes(mode))
+    answers += `<button class="short-unknown test-dont-know" data-action="dont-know" ${disabled}>わからない</button>`;
+  const saved = state.savedWords.includes(word.id),
+    difficult = state.difficultWords.includes(word.id);
+  let html = `<article class="feed-page short-page" ${preview ? 'data-feed-next inert aria-hidden="true"' : "data-feed-current"} style="--short-tone:${index % 2 ? "#163b48" : "#123f36"}"><div class="short-scene"><span class="short-mode">${label}</span><h2>${escapeHTML(title)}</h2><p class="short-pronunciation">${["study", "recall", "meaning-select"].includes(mode) ? escapeHTML(word.kana) : ""}</p><aside class="short-rail" aria-label="単語の操作"><button data-learn-action="pronounce" aria-label="発音を聞く" ${preview ? "disabled" : ""}>${icons.volume}<small>発音</small></button><button data-learn-action="save" aria-label="単語を保存" aria-pressed="${saved}" ${preview ? "disabled" : ""}>${icons.bookmark}<small>保存</small></button><button data-learn-action="difficult" aria-label="苦手に登録" aria-pressed="${difficult}" ${preview ? "disabled" : ""}>${icons.flag}<small>苦手</small></button></aside></div><section class="short-bottom" aria-label="解答"><div id="test-result" class="short-feedback ${result?.known ? "good" : result && !result.study ? "bad" : ""}" aria-live="polite">${result ? (result.study ? "確認しました" : result.known ? "正解！" : "正解：" + escapeHTML(["spelling", "english-select"].includes(mode) ? word.word : word.meaning)) : ""}</div>${answers}<div class="short-next-row"><span class="short-swipe-hint">${result ? "上にスワイプして次へ" : "↑ 上にスワイプでスキップ"}</span><button class="short-next" data-learn-action="next" aria-label="${index + 1 === learning.words.length ? "学習結果へ" : "次の問題へ"}" ${preview ? "disabled" : ""}>↑</button></div></section></article>`;
+  if (preview)
+    html = html
+      .replace(/ id="[^"]*"/g, "")
+      .replace(/data-test-answer=/g, "data-preview-choice=")
+      .replace(/data-learn-action=/g, "data-preview-action=")
+      .replace(/data-action=/g, "data-preview-control=");
+  return html;
 }
 function renderQuickTest(word) {
   const letters = ["A", "B", "C", "D"];
@@ -1287,8 +1323,8 @@ function setupLearningEvents() {
     }
   });
   KotomiaFeed.mount(document.querySelector(".study-feed"), () => {
-    if (!learning || learning.testAnswered || learning.answerPending) return;
-    learnAction("skip");
+    if (!learning || learning.answerPending) return;
+    nextLearningQuestion();
   });
 }
 function revealCurrent() {
@@ -1303,21 +1339,8 @@ function revealCurrent() {
   haptic(8);
 }
 function animateSwipe(known) {
-  if (!learning || !learning.revealed || learning.answerPending) return;
-  dismissSwipeIntro();
-  const session = learning,
-    index = learning.index;
-  session.answerPending = true;
-  const card = document.querySelector("#word-card");
-  if (card) card.classList.add(known ? "is-out-up" : "is-out-down");
-  setTimeout(
-    () => {
-      if (learning !== session || learning.index !== index) return;
-      session.answerPending = false;
-      applyAnswer(known);
-    },
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 290,
-  );
+  if (!learning || !learning.revealed || learning.responses?.[learning.index]) return;
+  applyAnswer(known);
 }
 
 let reviewFlush = null;
@@ -1449,20 +1472,23 @@ function queuePractice(word) {
   learning.englishOptions.splice(at, 0, []);
 }
 function finishStudy() {
-  if (!learning || questionMode() !== "study") return;
+  if (!learning || questionMode() !== "study" || learning.responses?.[learning.index]) return;
   const word = currentWord();
   state.words[word.id] = TangoScheduler.practice(state.words[word.id], false, "study");
-  // Put a retrieval check after other words; never award mastery for viewing a card.
   learning.words.push(word);
   learning.questionModes.push("meaning-select");
   learning.englishOptions.push([]);
+  learning.responses = learning.responses || {};
+  learning.responses[learning.index] = { study: true };
+  learning.testAnswered = true;
   persist();
-  learning.index++;
-  learning.testAnswered = false;
   renderLearning();
 }
 function applyAnswer(known) {
-  if (!learning) return;
+  if (!learning || learning.responses?.[learning.index]) return;
+  learning.responses = learning.responses || {};
+  learning.responses[learning.index] = { known, choice: learning.selectedChoice };
+  learning.testAnswered = true;
   const word = currentWord();
   if (!known) queuePractice(word);
   updateWordData(word, known);
@@ -1471,18 +1497,19 @@ function applyAnswer(known) {
     state.daily.words += 1;
   }
   persist();
+  renderLearning();
+}
+function nextLearningQuestion() {
+  if (!learning || learning.answerPending) return;
   learning.index += 1;
   learning.revealed = false;
   learning.testAnswered = false;
+  learning.selectedChoice = null;
   if (learning.index >= learning.words.length) return finishLearning();
   renderLearning();
 }
-function schedulePracticeAnswer(known, delay) {
-  const session = learning,
-    index = learning?.index;
-  setTimeout(() => {
-    if (learning === session && learning?.index === index) applyAnswer(known);
-  }, delay);
+function schedulePracticeAnswer(known) {
+  applyAnswer(known);
 }
 function testAnswer(choice) {
   if (!learning || learning.testAnswered) return;
@@ -1494,8 +1521,9 @@ function testAnswer(choice) {
     mode === "meaning-select"
       ? selectedOptions[choice] === word.meaning
       : selectedOptions[choice]?.id === word.id;
+  learning.selectedChoice = choice;
   learning.testAnswered = true;
-  document.querySelectorAll("[data-test-answer]").forEach((btn) => {
+  document.querySelectorAll("[data-feed-current] [data-test-answer]").forEach((btn) => {
     const index = Number(btn.dataset.testAnswer);
     const isCorrect =
       mode === "meaning-select"
@@ -1640,6 +1668,10 @@ function finishLearning() {
 function learnAction(action) {
   if (!learning) return;
   const word = currentWord();
+  if (action === "next") {
+    nextLearningQuestion();
+    return;
+  }
   if (action === "study-next") {
     finishStudy();
     return;
@@ -1673,12 +1705,6 @@ function learnAction(action) {
     learning.revealed = false;
     if (learning.index >= learning.words.length) finishLearning();
     else renderLearning();
-  }
-  if (action === "auto") {
-    learning.auto = !learning.auto;
-    if (learning.auto) learning.usedAuto = true;
-    toast(learning.auto ? "自動送りをオンにしました。" : "自動送りをオフにしました。");
-    renderLearning();
   }
 }
 let capsuleLastResults = [];
@@ -2155,6 +2181,10 @@ window.addEventListener("click", (event) => {
 });
 window.addEventListener("input", (event) => {
   if (event.target.id === "display-name" && profileDraft) profileDraft.name = event.target.value;
+  if (event.target.id === "spelling-answer" && learning) {
+    learning.spellingDraft = learning.spellingDraft || {};
+    learning.spellingDraft[learning.index] = event.target.value;
+  }
 });
 window.addEventListener("submit", (event) => {
   if (event.target.id === "profile-form") {

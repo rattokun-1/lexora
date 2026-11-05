@@ -13,6 +13,8 @@ let modalReturnFocus = null;
 const app = document.querySelector("#app");
 
 const icons = {
+  growth: `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 15 7-6 7 6M5 9l7-6 7 6M7 20h10"/></svg>`,
+  token: `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 5v8l-8 5-8-5V8Z"/><path d="m12 7 4 5-4 5-4-5 4-5Z"/></svg>`,
   map: `<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6ZM9 3v15M15 6v15"/><path d="m5 10 2-1M17 12l2-1"/></svg>`,
   edit: `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L20 8a3.5 3.5 0 0 0-5-5L4 14Z"/></svg>`,
   mail: `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>`,
@@ -780,7 +782,7 @@ function statusBarHtml() {
     10,
     Math.max(0, state.daily.date === todayKey() ? Number(state.daily.words || 0) : 0),
   );
-  return `<div class="top-glass-chrome"><aside class="liquid-status" aria-label="学習ステータス"><span class="status-level" aria-label="プレイヤーレベル ${state.level}">${icons.spark}<small>Lv.</small><b>${state.level}</b></span><span class="status-coin" aria-label="コイン ${state.coin}">${icons.coin}<b>${state.coin}</b></span><button class="status-progress" data-action="next-plan" aria-label="今日の進捗 ${words} / 10語。次の学習を確認"><svg class="daily-ring" viewBox="0 0 32 32" role="progressbar" aria-label="今日の学習進捗" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${words}"><circle class="daily-ring-track" cx="16" cy="16" r="12"/><circle class="daily-ring-fill" cx="16" cy="16" r="12" pathLength="100" stroke-dasharray="${words * 10} 100"/>${words === 10 ? '<path class="daily-ring-check" d="m11 16 3.5 3.5 7-7"/>' : '<circle class="daily-ring-dot" cx="16" cy="16" r="2"/>'}</svg><span><small>今日</small><b>${words}<em>/10</em></b></span></button></aside><button class="top-profile-button" data-action="account" aria-label="アカウントを開く" aria-haspopup="dialog" aria-expanded="${state.ui.modal === "account"}" ${state.ui.view === "community" ? 'aria-current="page"' : ""}>${avatarMarkup(state.profile.avatarId, state.profile.name, state.profile.avatarImage)}</button></div>`;
+  return `<div class="top-glass-chrome"><aside class="liquid-status" aria-label="学習ステータス"><span class="status-level" aria-label="プレイヤーレベル ${state.level}">${icons.growth}<small>Lv.</small><b>${state.level}</b></span><span class="status-coin" aria-label="コイン ${state.coin}">${icons.token}<b>${state.coin}</b></span><button class="status-progress" data-action="next-plan" aria-label="今日の進捗 ${words} / 10語。次の学習を確認"><svg class="icon status-goal-icon" viewBox="0 0 24 24" role="progressbar" aria-label="今日の学習進捗" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${words}"><path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Zm0 0v14"/><path d="m6 11 2 2 2-3M15 9h3m-3 4h3"/></svg><span><small>今日</small><b>${words}<em>/10</em></b><i class="status-goal-track" aria-hidden="true"><i style="width:${words * 10}%"></i></i></span></button></aside><button class="top-profile-button" data-action="account" aria-label="アカウントを開く" aria-haspopup="dialog" aria-expanded="${state.ui.modal === "account"}" ${state.ui.view === "community" ? 'aria-current="page"' : ""}>${avatarMarkup(state.profile.avatarId, state.profile.name, state.profile.avatarImage)}</button></div>`;
 }
 function topBar(title, action = "") {
   return `<header class="top-bar"><button class="icon-btn" data-nav="home" aria-label="ホームに戻る">${icons.back}</button><h1>${title}</h1>${action || `<span style="width:44px"></span>`}</header>`;
@@ -896,7 +898,7 @@ window.addEventListener("click", (event) => {
 function renderHome() {
   const plan = learningPlan(),
     done = state.daily.date === todayKey() ? state.daily.words : 0;
-  return `<main class="screen home-screen stage-home"><section class="home-launch"><div><span class="home-kicker">コトミア · 英単語学習</span><h1>今日のステージへ</h1><p>復習 ${plan.selected.filter((x) => !x.isNew).length}語 · 新しい単語 ${plan.selected.filter((x) => x.isNew).length}語</p></div><button class="primary-btn" ${state.placement?.result ? 'data-start="daily"' : 'data-action="placement-open"'}>${state.placement?.result ? "学習スタート" : "レベルチェックを始める"} ${icons.arrow}</button></section><div class="stage-home-links"><button data-nav="capsule">${icons.gift}<strong>星のアトリエ</strong><span>学習コインでガチャ</span></button><button data-nav="duel">${icons.spark}<strong>ワードスプリント</strong><span>60秒の単語対戦</span></button></div><section class="stage-path" aria-label="学習ステージ"><header><h2>ステージ</h2><p>完了 ${state.completedLessons.length} / ${TangoProgress.count(vocab)} · 今日 ${done}問</p></header>${renderStages()}</section><p class="lexora-data-notice">出題改善のため学習履歴を収集します。<a href="privacy.html">データの取り扱い</a></p></main>`;
+  return `<main class="screen home-screen stage-home"><section class="home-launch"><div><span class="home-kicker">コトミア · 英単語学習</span><h1>今日のステージへ</h1><p>復習 ${plan.selected.filter((x) => !x.isNew).length}語 · 新しい単語 ${plan.selected.filter((x) => x.isNew).length}語</p></div><button class="primary-btn" ${state.placement?.result ? 'data-start="daily"' : 'data-action="placement-open"'}>${state.placement?.result ? "学習スタート" : "レベルチェックを始める"} ${icons.arrow}</button></section><div class="stage-home-links"><button data-nav="capsule">${icons.gift}<strong>星のアトリエ</strong><span>学習コインでガチャ</span></button><button data-nav="duel">${icons.spark}<strong>ワードスプリント</strong><span>60秒の単語対戦</span></button></div><section class="stage-path" aria-label="学習ステージ"><header><h2>ステージ</h2><p>完了 ${state.completedLessons.length} / ${TangoProgress.count(vocab)} · 今日 ${done}問</p></header>${renderStages()}</section></main>`;
 }
 function renderStages() {
   const route = courseRoute(),
@@ -936,7 +938,14 @@ function renderProfileEditor() {
   return `<div class="modal-backdrop" data-close-modal><section class="modal profile-editor" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title"><div class="modal-head"><h2 id="profile-edit-title">プロフィールを編集</h2><button class="icon-btn" data-action="close-modal" aria-label="編集をキャンセル">${icons.close}</button></div><form id="profile-form"><div class="editor-photo"><button class="editor-photo-picker" type="button" data-action="choose-avatar">${avatarMarkup(state.profile.avatarId, profileDraft.name, profileDraft.avatarImage)}<span>${icons.camera} 写真を変更</span></button><input id="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden />${profileDraft.avatarImage ? `<button class="text-link" type="button" data-action="reset-avatar-photo">初期画像に戻す</button>` : ""}</div><div class="field"><label for="display-name">${icons.user} 表示名</label><input id="display-name" name="displayName" maxlength="20" required autocomplete="nickname" value="${escapeHTML(profileDraft.name || "")}" placeholder="表示名を入力" /><small>アプリで使う表示名です。</small></div><footer class="profile-editor-footer"><button class="outline-btn" type="button" data-action="close-modal">キャンセル</button><button class="primary-btn" type="submit">${icons.check} 変更を保存</button></footer></form></section></div>`;
 }
 function renderAccountPopup() {
-  return `<div class="modal-backdrop account-backdrop" data-close-modal><section class="modal account-popup" role="dialog" aria-modal="true" aria-labelledby="account-title"><div class="modal-head"><h2 id="account-title">コトミア</h2><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></div><div class="account-identity">${avatarMarkup(state.profile.avatarId, state.profile.name, state.profile.avatarImage)}<div><h3>${escapeHTML(state.profile.name)}</h3><p>${escapeHTML(cloudUser?.email || "この端末に保存中")}</p></div></div><div class="account-summary"><span>今日の学習<strong>${state.daily.date === todayKey() ? state.daily.words : 0}語</strong></span><span>連続学習<strong>${state.streak}日</strong></span></div><div class="account-links"><button class="primary-btn" data-action="account-settings">アカウント設定 ${icons.arrow}</button>${state.profile.loggedIn ? '<button class="text-link" data-action="logout">ログアウト</button>' : ""}</div></section></div>`;
+  if (!profileDraft)
+    profileDraft = {
+      name: state.profile.name,
+      avatarImage: state.profile.avatarImage || "",
+      badges: [...state.equippedBadges],
+    };
+  const done = state.daily.date === todayKey() ? state.daily.words : 0;
+  return `<div class="modal-backdrop account-backdrop" data-close-modal><section class="modal account-popup account-quick-edit" role="dialog" aria-modal="true" aria-labelledby="account-title"><header class="modal-head"><div><span class="account-eyebrow">プロフィール</span><h2 id="account-title">あなたの設定</h2></div><button class="icon-btn" data-action="close-modal" aria-label="編集を閉じる">${icons.close}</button></header><form id="profile-form"><div class="account-edit-identity"><button class="account-photo-edit" type="button" data-action="choose-avatar" aria-label="プロフィール写真を変更">${avatarMarkup(state.profile.avatarId, profileDraft.name, profileDraft.avatarImage)}<span>${icons.camera}</span></button><div class="account-name-field"><label for="display-name">ニックネーム</label><input id="display-name" name="displayName" maxlength="20" required autocomplete="nickname" value="${escapeHTML(profileDraft.name)}"/><p>${escapeHTML(cloudUser?.email || "この端末に保存中")}</p></div><input id="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp" hidden/></div><div class="account-mini-record"><span>${icons.learn}<b>${done}</b>語 <small>今日</small></span><span>${icons.flame}<b>${state.streak}</b>日 <small>連続</small></span></div><button class="primary-btn account-save" type="submit">変更を保存</button></form><details class="account-more"><summary>${icons.gear}<span>アカウント・表示設定</span></summary><div class="account-more-content"><button class="outline-btn" data-action="account-settings">詳しい設定を開く ${icons.arrow}</button>${profileDraft.avatarImage ? '<button class="text-link" data-action="reset-avatar-photo">写真を初期画像に戻す</button>' : ""}${state.profile.loggedIn ? '<button class="text-link" data-action="logout">ログアウト</button>' : '<button class="text-link" data-action="login">パスキーでログイン</button>'}</div></details><p class="account-data-notice">出題改善のため学習履歴を収集します。<a href="privacy.html" target="_blank" rel="noopener">データの取り扱い ${icons.arrow}</a></p></section></div>`;
 }
 function renderAccountSettings() {
   return `<div class="modal-backdrop" data-close-modal><section class="modal account-settings" role="dialog" aria-modal="true" aria-labelledby="settings-title"><div class="modal-head"><h2 id="settings-title">アカウント設定</h2><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></div><div class="account-links"><button class="outline-btn" data-action="profile">プロフィールを編集 ${icons.arrow}</button>${state.profile.loggedIn ? '<button class="outline-btn" data-action="passkey-register">パスキーを追加</button>' : '<button class="primary-btn" data-action="enroll-signup">アカウントを作成</button><button class="outline-btn" data-action="login">パスキーでログイン</button>'}<details><summary>その他の設定</summary><button class="outline-btn" data-action="theme">明るさを切り替える</button><button class="outline-btn" data-action="sound">音を${state.settings.sound ? "オフ" : "オン"}にする</button><a href="privacy.html">学習データの取り扱い</a><p>復旧用メール：${escapeHTML(cloudUser?.email || "未登録")}。パスキーを紛失した場合はログイン画面からメールで復旧できます。</p></details></div></section></div>`;
@@ -1007,7 +1016,7 @@ function renderModal() {
 
 function renderApp() {
   resetDailyIfNeeded();
-  if (state.ui.modal !== "edit-profile") profileDraft = null;
+  if (!["edit-profile", "account"].includes(state.ui.modal)) profileDraft = null;
   clearAuto();
 
   const previousModal = app.querySelector('[role="dialog"]');
@@ -1847,10 +1856,10 @@ async function resizeAvatarFile(file) {
 }
 async function handleAvatarFile(file) {
   const draft = profileDraft;
-  if (!draft || state.ui.modal !== "edit-profile") return;
+  if (!draft || !["edit-profile", "account"].includes(state.ui.modal)) return;
   try {
     const image = await resizeAvatarFile(file);
-    if (profileDraft !== draft || state.ui.modal !== "edit-profile") return;
+    if (profileDraft !== draft || !["edit-profile", "account"].includes(state.ui.modal)) return;
     draft.avatarImage = image;
     renderApp();
     toast("写真を読み込みました。変更を保存すると反映されます。", "good");

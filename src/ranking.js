@@ -1,0 +1,49 @@
+(function (root) {
+  "use strict";
+  let generation = 0;
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+    );
+  function render() {
+    return '<main class="screen ranking-screen"><header class="feature-heading"><span>直近7日間</span><h1>ランキング</h1><p>ワードスプリントのベスト正解数で競おう。同点は同じ順位です。</p></header><div id="ranking-content" role="status">読み込み中…</div><button class="primary-btn" data-nav="duel">対戦に挑戦する</button></main>';
+  }
+  async function mount() {
+    const id = ++generation,
+      el = document.getElementById("ranking-content");
+    try {
+      const c = await root.TangoCloud.init();
+      const {
+        data: { user },
+      } = await c.auth.getUser();
+      if (!user) throw Error("ランキングを見るには、プロフィールからログインしてください。");
+      const { data, error } = await c.rpc("kotomia_leaderboard");
+      if (error) {
+        if (error.code === "PGRST202" || error.code === "42883")
+          throw Error("ランキングの準備中です。管理者によるv1.4.3のDB設定後に利用できます。");
+        throw Error("ランキングを読み込めませんでした。時間をおいて開き直してください。");
+      }
+      if (id !== generation || !el.isConnected) return;
+      el.innerHTML = data.length
+        ? '<ol class="ranking-list">' +
+          data
+            .map(
+              (r) =>
+                `<li class="${r.is_self ? "is-self" : ""}"><span>${Number(r.place)}</span><strong>${r.is_self ? "あなた" : esc(r.alias)}</strong><b>${Number(r.score)}<small>問</small></b></li>`,
+            )
+            .join("") +
+          "</ol>"
+        : "<p>まだ記録がありません。最初の対戦に挑戦しましょう。</p>";
+    } catch (e) {
+      if (id === generation && el?.isConnected) el.textContent = e.message;
+    }
+  }
+  root.KotomiaRanking = {
+    render,
+    mount,
+    unmount() {
+      generation++;
+    },
+  };
+})(window);

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>コトミア メールアドレス確認</title>
+  </head>
+  <body style="margin:0;background:#e7e9ec;color:#151619;font-family:Arial,'Noto Sans JP',sans-serif">
+    <div style="display:none;max-height:0;overflow:hidden">コトミアの登録を続けるため、メールアドレスを確認してください。</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td align="center" style="padding:40px 16px">
+          <table role="presentation" width="520" cellspacing="0" cellpadding="0" style="width:100%;max-width:520px;background:#f8f9fa;border:1px solid #d5d9df;border-radius:28px;box-shadow:0 12px 30px rgba(80,88,102,.16)">
+            <tr>
+              <td style="padding:34px 28px 30px">
+                <p style="margin:0 0 34px;font-size:23px;font-weight:800;letter-spacing:.02em;color:#151619">
+                  コトミア <span style="font-size:11px;font-weight:600;color:#787d85">英単語学習</span>
+                </p>
+                <p style="margin:0 0 10px;color:#778f08;font-size:11px;font-weight:800;letter-spacing:2px">EMAIL VERIFICATION</p>
+                <h1 style="margin:0 0 16px;font-size:25px;line-height:1.5;color:#151619">登録を続けましょう</h1>
+                <p style="margin:0 0 26px;font-size:14px;line-height:1.9;color:#555b64">
+                  コトミアのアカウント登録を続けるには、下のボタンを押してメールアドレスを確認してください。確認後、画面に戻ってパスキーを登録できます。
+                </p>
+                <table role="presentation" cellspacing="0" cellpadding="0" align="center">
+                  <tr>
+                    <td align="center" style="border-radius:999px;background:#151619">
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:15px 28px;border-radius:999px;color:#f4f5f2;font-size:15px;font-weight:800;text-decoration:none">メールアドレスを確認する</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:22px 0 0;font-size:12px;line-height:1.8;color:#787d85">
+                  ボタンが使えない場合は、次のURLをブラウザで開いてください。<br />
+                  <a href="{{ .ConfirmationURL }}" style="color:#5f7200;word-break:break-all">{{ .ConfirmationURL }}</a>
+                </p>
+                <div style="height:1px;background:#d5d9df;margin:28px 0"></div>
+                <p style="margin:0;font-size:11px;line-height:1.9;color:#787d85">
+                  このリンクに心当たりがない場合は、何もせずメールを破棄してください。リンクには有効期限があります。
+                </p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:20px 0 0;color:#787d85;font-size:10px">コトミア · Kotomia</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

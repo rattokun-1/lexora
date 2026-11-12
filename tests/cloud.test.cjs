@@ -34,7 +34,7 @@ test("unconfigured cloud does not import remote SDK and gives actionable authent
   assert.equal(cloud.configured(), false);
   await assert.rejects(cloud.signIn(), /Supabase/);
 });
-test("navigation has study shortcut and no gacha or social route", () => {
+test("navigation exposes study, ranking and atelier without a travel route", () => {
   const ctx = { icons: { home: "h", map: "m", learn: "l" }, state: { ui: {} } };
   vm.createContext(ctx);
   vm.runInContext(
@@ -43,7 +43,8 @@ test("navigation has study shortcut and no gacha or social route", () => {
   );
   const nav = ctx.navHtml("path");
   assert(nav.includes('data-start="daily"'));
-  assert(!nav.includes("ガチャ") && !nav.includes("フレンド"));
+  assert(nav.includes('data-nav="ranking"') && nav.includes('data-nav="capsule"'));
+  assert(!nav.includes('data-nav="path"') && !nav.includes("フレンド"));
 });
 test("shrine is reachable without completing a lesson", () => {
   const A = require("../src/adventure-data.js"),

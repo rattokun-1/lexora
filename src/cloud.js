@@ -7,7 +7,9 @@
     experimental: { passkey: true },
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true,
+    storage: root.localStorage,
+    storageKey: "kotomia.supabase.auth",
   };
   let client = null;
   let loading = null;
@@ -49,6 +51,27 @@
     return data;
   }
 
+  async function createLesson(limit = 10) {
+    const connection = await required();
+    const { data, error } = await connection.rpc("lexora_create_lesson", {
+      requested_limit: limit,
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async function answerLesson(lessonId, itemIndex, selectedChoice, answerText = null) {
+    const connection = await required();
+    const { data, error } = await connection.rpc("lexora_answer_lesson", {
+      lesson_id: lessonId,
+      item_number: itemIndex,
+      selected_choice: selectedChoice,
+      answer_text: answerText,
+    });
+    if (error) throw error;
+    return data;
+  }
+
   async function activeModel() {
     const connection = await required();
     const { data, error } = await connection
@@ -69,6 +92,17 @@
     connection.auth.onAuthStateChange((_event, session) => {
       setTimeout(() => callback(session?.user || null), 0);
     });
+    const { data, error } = await connection.auth.getSession();
+    if (error) throw error;
+    callback(data.session?.user || null);
+  }
+
+  async function ready() {
+    const connection = await init();
+    if (!connection) return null;
+    const { data, error } = await connection.auth.getSession();
+    if (error) throw error;
+    return data.session?.user || null;
   }
 
   async function signIn() {
@@ -92,6 +126,26 @@
       options: { shouldCreateUser: createUser },
     });
     if (error) throw error;
+  }
+
+  async function sendEmailLink(email, _name, createUser = true) {
+    const connection = await required();
+    const { error } = await connection.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: createUser,
+      },
+    });
+    if (error) throw error;
+  }
+
+  async function updateUserName(name) {
+    const connection = await required();
+    const { data, error } = await connection.auth.updateUser({
+      data: { display_name: name, user_id: name },
+    });
+    if (error) throw error;
+    return data.user;
   }
 
   async function verifyEmailCode(email, token) {
@@ -134,11 +188,16 @@
     configured,
     init,
     recordReviews,
+    createLesson,
+    answerLesson,
     activeModel,
     onAuth,
+    ready,
     signIn,
     registerPasskey,
     sendEmailCode,
+    sendEmailLink,
+    updateUserName,
     verifyEmailCode,
     signOut,
     load,

@@ -160,6 +160,10 @@ test("production build excludes 3D engine and includes leaderboard setup", () =>
   assert(!fs.existsSync("dist/src/world-map.bundle.js"));
   assert(!fs.existsSync("dist/src/vendor/three.module.js"));
   assert(fs.existsSync("dist/setup/202611040001_leaderboard.sql"));
+  assert(fs.existsSync("dist/setup/202611120001_personalized_lessons.sql"));
+  assert(fs.existsSync("dist/setup/202611120002_lesson_formats.sql"));
+  assert(fs.existsSync("dist/setup/email-templates/email-otp.html"));
+  assert(fs.existsSync("dist/setup/email-templates/email-magic-link.html"));
   const index = fs.readFileSync("dist/index.html", "utf8");
   assert(!/world-loader|adventure-data/.test(index));
 });

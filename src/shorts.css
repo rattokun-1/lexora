@@ -684,3 +684,47 @@ body .shorts-feed .short-unknown {
     animation: none !important;
   }
 }
+
+/* Keep every question legible from a narrow phone through a desktop viewport. */
+.shorts-feed .short-scene {
+  padding-inline: clamp(24px, 8vw, 108px);
+  padding-right: clamp(82px, 12vw, 140px);
+}
+.shorts-feed .short-bottom {
+  width: min(100%, 840px);
+  margin-inline: auto;
+  padding-inline: clamp(18px, 5vw, 42px);
+}
+.shorts-feed .short-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.shorts-feed .short-option {
+  min-height: clamp(58px, 8vw, 72px);
+  font-size: clamp(14px, 1.6vw, 17px);
+}
+.shorts-feed .short-option strong {
+  font-size: inherit;
+}
+.shorts-feed .short-spelling {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+.shorts-feed .short-spelling input {
+  min-height: 58px;
+  font-size: clamp(16px, 2vw, 19px);
+}
+.shorts-feed .short-spelling .short-primary {
+  min-width: 108px;
+  min-height: 58px;
+}
+@media (min-width: 900px) {
+  body main.screen.shorts-screen { max-width: 920px !important; }
+  .shorts-feed .short-scene { min-height: 48%; }
+  .shorts-feed .short-rail { right: calc(50% - 430px); }
+}
+@media (max-width: 600px) {
+  .shorts-feed .short-options { grid-template-columns: 1fr; }
+  .shorts-feed .short-spelling { grid-template-columns: 1fr; }
+  .shorts-feed .short-spelling .short-primary { width: 100%; min-height: 52px; }
+  .shorts-feed .short-spelling input { min-height: 54px; }
+}

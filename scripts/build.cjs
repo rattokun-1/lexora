@@ -17,5 +17,20 @@ fs.copyFileSync(
   "supabase/migrations/202611040001_leaderboard.sql",
   "dist/setup/202611040001_leaderboard.sql",
 );
+fs.copyFileSync(
+  "supabase/migrations/202611120001_personalized_lessons.sql",
+  "dist/setup/202611120001_personalized_lessons.sql",
+);
+fs.copyFileSync(
+  "supabase/migrations/202611120002_lesson_formats.sql",
+  "dist/setup/202611120002_lesson_formats.sql",
+);
+fs.mkdirSync("dist/setup/email-templates", { recursive: true });
+for (const template of ["email-otp.html", "email-magic-link.html"]) {
+  fs.copyFileSync(
+    "supabase/templates/" + template,
+    "dist/setup/email-templates/" + template,
+  );
+}
 fs.copyFileSync("docs/v1.4.3.md", "dist/setup/README.md");
 console.log("Static release created in dist/");

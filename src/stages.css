@@ -877,3 +877,107 @@ body .status-progress > span {
     margin-left: 2px;
   }
 }
+
+/* Responsive home and a clear, ordered lesson route. */
+body .screen.stage-home {
+  width: min(100%, 980px);
+  padding-inline: clamp(14px, 3vw, 30px);
+}
+.stage-home .home-launch {
+  min-height: 132px;
+  padding: clamp(20px, 4vw, 32px);
+}
+.stage-home .home-launch > div { min-width: 0; }
+.stage-home .home-launch h1 { text-wrap: balance; }
+.stage-home-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stage-path { padding: clamp(18px, 3vw, 30px); }
+.stage-road {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  padding: 18px 0 12px;
+}
+.stage-road::before {
+  top: 56px;
+  bottom: auto;
+  left: 7%;
+  right: 7%;
+  border-left: 0;
+  border-top: 3px dashed var(--line-strong);
+}
+.stage-stop { display: block; transform: none; min-width: 0; }
+.stage-stop button {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 126px;
+  height: 100%;
+  padding: 13px 10px;
+  border-width: 1px;
+  border-radius: 18px;
+  box-shadow: 0 3px 0 var(--line);
+  text-align: center;
+}
+.stage-node-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 9px;
+  border-radius: 14px;
+  background: var(--surface);
+  font: 800 17px Manrope, sans-serif;
+}
+.stage-stop.current .stage-node-icon { color: var(--quest-accent); }
+.stage-stop.done .stage-node-icon { color: #725017; }
+.stage-node-icon .icon { width: 20px; height: 20px; }
+.stage-node-copy { display: grid; gap: 3px; }
+.stage-node-copy strong { padding: 0; background: none; font-size: 11px; }
+.stage-node-copy small { padding: 0; background: none; font-size: 10px; }
+.stage-node-action { display: none; }
+.stage-pagination { margin-top: 14px; }
+
+@media (max-width: 640px) {
+  body .screen.stage-home { padding-top: 88px; padding-bottom: 112px; }
+  .stage-home .home-launch {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    min-height: 0;
+    border-radius: 23px;
+  }
+  .stage-home .home-launch h1 { font-size: clamp(25px, 8vw, 32px); line-height: 1.25; }
+  .stage-home .home-launch > .primary-btn { width: 100%; min-width: 0; min-height: 58px; }
+  .stage-home-links { gap: 10px; margin: 14px 0 20px; }
+  .stage-home-links button { min-height: 118px; padding: 16px; border-radius: 18px; }
+  .stage-home-links strong { font-size: 14px; }
+  .stage-home-links span { line-height: 1.45; }
+  .stage-path { border-radius: 23px; }
+  .stage-path header { text-align: left; }
+  .stage-road { grid-template-columns: 1fr; gap: 8px; padding: 6px 0 14px; }
+  .stage-road::before {
+    top: 29px;
+    bottom: 29px;
+    left: 28px;
+    right: auto;
+    border-top: 0;
+    border-left: 3px dashed var(--line-strong);
+  }
+  .stage-stop button {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 8px 13px;
+    border-radius: 16px;
+    text-align: left;
+  }
+  .stage-node-icon { width: 44px; height: 44px; margin: 0; border-radius: 13px; }
+  .stage-node-copy strong { font-size: 13px; }
+  .stage-node-copy small { font-size: 10px; }
+  .stage-node-action { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; }
+  .stage-node-action .icon { width: 15px; height: 15px; }
+  .stage-pagination .outline-btn { min-height: 44px; padding-inline: 15px; }
+}

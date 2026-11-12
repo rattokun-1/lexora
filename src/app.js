@@ -9,6 +9,7 @@ let authBusy = false;
 let syncTimer = null;
 let applyingRemoteState = false;
 let syncStatus = { state: "idle", message: "" };
+let modelRefreshAt = 0;
 let modalReturnFocus = null;
 const app = document.querySelector("#app");
 
@@ -638,14 +639,14 @@ function renderEnrollment() {
   const recover = enrollment.mode === "recover",
     stage = enrollment.stage,
     step = stage === "passkey" ? 3 : stage === "code" ? 2 : 1;
-  const labels = [recover ? "メール" : "プロフィール", "メール確認", "パスキー"];
+  const labels = [recover ? "メール" : "登録情報", "メール認証", "パスキー"];
   const titles = [
-    recover ? "登録メールを確認" : "プロフィールを設定",
+    recover ? "登録メールを確認" : "登録情報を設定",
     "メールを確認",
     "パスキーを作成",
   ];
   const busy = authBusy ? '<span class="enroll-spinner" aria-hidden="true"></span>' : "";
-  return `<div class="modal-backdrop enrollment-backdrop"><section class="modal enrollment-modal" data-enroll-stage="${stage}" aria-busy="${authBusy}" role="dialog" aria-modal="true" aria-labelledby="enroll-title"><header class="enroll-header"><span class="enroll-kicker">${recover ? "アカウントの復旧" : "アカウントの作成"}</span><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></header><div class="enroll-progress" aria-label="登録の進捗"><div class="enroll-progress-meta"><span>STEP <b>0${step}</b></span><span>0${step} / 03</span></div><div class="enroll-progress-track" role="progressbar" aria-label="${labels[step - 1]}" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${step}" aria-valuetext="3段階中${step}段階目：${labels[step - 1]}"><i style="--enroll-progress:${(step / 3) * 100}%"></i></div><ol class="enroll-step-labels">${labels.map((label, i) => `<li class="${i + 1 === step ? "current" : i + 1 < step ? "done" : ""}" ${i + 1 === step ? 'aria-current="step"' : ""}><span>${i + 1 < step ? "✓" : i + 1}</span>${label}</li>`).join("")}</ol></div><div class="enroll-content"><h2 id="enroll-title">${titles[step - 1]}</h2><p class="enroll-intro">${step === 1 ? (recover ? "確認後、新しいパスキーを登録できます。" : "アプリで使う名前と、復旧用のメールを設定します。") : step === 2 ? "メールに届いた確認コードを入力してください。" : "顔認証・指紋認証・端末のPINで登録できます。"}</p>${stage === "passkey" ? `<div class="enroll-passkey-art" aria-hidden="true"><div>${icons.user}</div><span>${icons.check}</span></div><div class="enroll-confirmed">${icons.check}メールの確認ができました</div><button class="primary-btn enroll-submit" data-action="passkey-register" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "登録中…" : "パスキーを作成する"}</button><p class="enroll-footnote">パスワードを覚える必要はありません。</p>` : `<form id="enrollment-form">${stage === "profile" ? `${!recover ? `<label class="enroll-avatar">${avatarMarkup("", enrollment.name, enrollment.avatarImage)}<span class="enroll-photo-copy"><strong>プロフィール写真</strong><small>写真を選ぶ · 未選択なら標準画像</small></span><span class="enroll-photo-action">${icons.camera}</span><input id="enroll-avatar" class="enroll-file-input" type="file" accept="image/png,image/jpeg,image/webp" aria-label="プロフィール写真を選ぶ" /></label><label>ニックネーム<input name="nickname" autocomplete="nickname" maxlength="20" required placeholder="アプリで使う名前" value="${escapeHTML(enrollment.name)}" /></label>` : ""}<label>復旧用メールアドレス<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="${escapeHTML(enrollment.email)}" /></label><p class="enroll-field-note">${recover ? "アカウントに登録したメールアドレスを入力してください。" : "パスキーを紛失したときの本人確認に使います。"}</p>` : `<div class="enroll-email-destination">${icons.mail}<span>${escapeHTML(enrollment.email)}</span></div><label>確認コード<input class="enroll-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required placeholder="確認コード" /></label>`}<button class="primary-btn enroll-submit" type="submit" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "処理中…" : stage === "profile" ? "確認コードを送る" : "メールを確認する"}${authBusy ? "" : icons.arrow}</button>${stage === "code" ? '<button class="text-link enroll-resend" type="button" data-action="enroll-resend">コードを再送信</button>' : '<p class="enroll-footnote">パスワードは作成しません。コトミアは出題改善のため学習履歴を収集します。<a href="privacy.html" target="_blank" rel="noopener">データの取り扱い</a></p>'}</form>`}</div></section></div>`;
+  return `<div class="modal-backdrop enrollment-backdrop"><section class="modal enrollment-modal" data-enroll-stage="${stage}" aria-busy="${authBusy}" role="dialog" aria-modal="true" aria-labelledby="enroll-title"><header class="enroll-header"><span class="enroll-kicker">${recover ? "アカウントの復旧" : "アカウントの作成"}</span><button class="icon-btn" data-action="close-modal" aria-label="閉じる">${icons.close}</button></header><div class="enroll-progress" aria-label="登録の進捗"><div class="enroll-progress-meta"><span>STEP <b>0${step}</b></span><span>0${step} / 03</span></div><div class="enroll-progress-track" role="progressbar" aria-label="${labels[step - 1]}" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${step}" aria-valuetext="3段階中${step}段階目：${labels[step - 1]}"><i style="--enroll-progress:${(step / 3) * 100}%"></i></div><ol class="enroll-step-labels">${labels.map((label, i) => `<li class="${i + 1 === step ? "current" : i + 1 < step ? "done" : ""}" ${i + 1 === step ? 'aria-current="step"' : ""}><span>${i + 1 < step ? "✓" : i + 1}</span>${label}</li>`).join("")}</ol></div><div class="enroll-content"><h2 id="enroll-title">${titles[step - 1]}</h2><p class="enroll-intro">${step === 1 ? (recover ? "確認後、新しいパスキーを登録できます。" : "登録情報を送信した後、メール認証を行います。") : step === 2 ? "メールに届いた確認コードを入力して、登録を完了してください。" : "顔認証・指紋認証・端末のPINで登録できます。"}</p>${stage === "passkey" ? `<div class="enroll-passkey-art" aria-hidden="true"><div>${icons.user}</div><span>${icons.check}</span></div><div class="enroll-confirmed">${icons.check}メールを認証しました</div><button class="primary-btn enroll-submit" data-action="passkey-register" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "登録中…" : "パスキーを作成する"}</button><p class="enroll-footnote">パスワードを覚える必要はありません。</p>` : `<form id="enrollment-form">${stage === "profile" ? `${!recover ? `<label class="enroll-avatar">${avatarMarkup("", enrollment.name, enrollment.avatarImage)}<span class="enroll-photo-copy"><strong>プロフィール写真</strong><small>写真を選ぶ · 未選択なら標準画像</small></span><span class="enroll-photo-action">${icons.camera}</span><input id="enroll-avatar" class="enroll-file-input" type="file" accept="image/png,image/jpeg,image/webp" aria-label="プロフィール写真を選ぶ" /></label><label>ニックネーム<input name="nickname" autocomplete="nickname" maxlength="20" required placeholder="アプリで使う名前" value="${escapeHTML(enrollment.name)}" /></label>` : ""}<label>復旧用メールアドレス<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="${escapeHTML(enrollment.email)}" /></label><p class="enroll-field-note">${recover ? "アカウントに登録したメールアドレスを入力してください。" : "登録後に認証します。パスキーを紛失したときの本人確認にも使います。"}</p>` : `<div class="enroll-email-destination">${icons.mail}<span>${escapeHTML(enrollment.email)}</span></div><label>確認コード<input class="enroll-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" minlength="6" maxlength="10" required placeholder="確認コード" /></label>`}<button class="primary-btn enroll-submit" type="submit" ${authBusy ? "disabled" : ""}>${busy}${authBusy ? "処理中…" : stage === "profile" ? (recover ? "確認コードを送る" : "登録して認証メールを送る") : "メールを認証する"}${authBusy ? "" : icons.arrow}</button>${stage === "code" ? '<button class="text-link enroll-resend" type="button" data-action="enroll-resend">コードを再送信</button>' : '<p class="enroll-footnote">パスワードは作成しません。コトミアは出題改善のため学習履歴を収集します。<a href="privacy.html" target="_blank" rel="noopener">データの取り扱い</a></p>'}</form>`}</div></section></div>`;
 }
 async function passkeyAction(register = false) {
   if (authBusy) return;
@@ -912,13 +913,14 @@ function renderStages() {
       ),
     );
   const visible = route.slice(page * 10, page * 10 + 10);
-  return `<div class="stage-chapter"><span>チャプター ${page + 1}</span><div class="stage-road">${visible
+  return `<div class="stage-chapter"><span>チャプター ${page + 1}</span><div class="stage-road" role="list">${visible
     .map((index, i) => {
       const done = state.completedLessons.includes(index),
         open = isUnlocked(index),
         current = index === front,
         n = page * 10 + i + 1;
-      return `<div class="stage-stop ${done ? "done" : current ? "current" : "locked"}" style="--bend:${[0, 1, 1, 0, -1, -1, 0, 1, 0, -1][i]}"><button ${open && state.placement?.result ? 'data-start="unit-' + (index + 1) + '"' : "disabled"} aria-label="ステージ ${n}${done ? " 完了" : current ? " 学習する" : " 未解放"}">${done ? icons.check : open ? n : icons.lock}</button><strong>${n}</strong><small>${done ? "完了" : current ? "ここから" : "未解放"}</small></div>`;
+      const status = done ? "完了" : current ? "学習する" : "未解放";
+      return `<div class="stage-stop ${done ? "done" : current ? "current" : "locked"}" role="listitem"><button ${open && state.placement?.result ? 'data-start="unit-' + (index + 1) + '"' : "disabled"} aria-label="ステージ ${n} ${status}"><span class="stage-node-icon">${done ? icons.check : open ? n : icons.lock}</span><span class="stage-node-copy"><strong>ステージ ${n}</strong><small>${status}</small></span>${current ? `<span class="stage-node-action">始める ${icons.arrow}</span>` : ""}</button></div>`;
     })
     .join(
       "",
@@ -1197,6 +1199,7 @@ function startLearning(id) {
     initialIds: words.map((word) => word.id),
     englishOptions: words.map(makeEnglishOptions),
     spellingCorrect: false,
+    questionStartedAt: Date.now(),
   };
   state.ui.view = "learn";
   state.ui.modal = null;
@@ -1258,7 +1261,7 @@ function renderShortQuestion(index, preview = false) {
         ? `<p class="short-meaning">${escapeHTML(word.meaning)}</p><div class="short-recall"><button data-action="recall-forgot" ${disabled}>思い出せない</button><button class="short-primary" data-action="recall-known" ${disabled}>思い出せた</button></div>`
         : `<button class="short-primary" data-action="recall-reveal" ${disabled}>意味を確認する</button>`;
   else if (mode === "spelling")
-    answers = `<form id="spelling-form" class="short-spelling" autocomplete="off"><label class="visually-hidden" for="spelling-answer">英単語</label><input id="spelling-answer" type="text" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="英単語を入力" value="${escapeHTML(learning.spellingDraft?.[index] || "")}" required ${disabled}/><button class="short-primary spelling-submit" type="submit" ${disabled}>答える</button></form>`;
+    answers = `<form id="spelling-form" class="short-spelling" autocomplete="off"><label class="visually-hidden" for="spelling-answer">英単語</label><input id="spelling-answer" type="text" autocapitalize="none" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="英単語を入力" value="${escapeHTML(learning.spellingDraft?.[index] || "")}" required ${disabled}/><button class="short-primary spelling-submit" type="submit" ${disabled}>入力して答える</button></form>`;
   else {
     const options =
       mode === "meaning-select"
@@ -1367,16 +1370,24 @@ async function flushReviews() {
     const sent = new Set(batch.map((e) => e.event_id));
     state.reviewEvents = (state.reviewEvents || []).filter((e) => !sent.has(e.event_id));
     persist({ sync: false });
+    if (Date.now() - modelRefreshAt > 300000) {
+      modelRefreshAt = Date.now();
+      TangoCloud.activeModel()
+        .then((model) => {
+          window.LexoraModel = model;
+        })
+        .catch(() => {});
+    }
   } catch {
     /* Offline queue retries after the next answer. */
   } finally {
     reviewFlush = null;
   }
 }
-function updateWordData(word, known) {
+function updateWordData(word, known, durationMs = null) {
   if (learning?.auto) return;
   const previous = state.words[word.id];
-  const review = LexoraLearning.event(word, previous, known, questionMode());
+  const review = LexoraLearning.event(word, previous, known, questionMode(), Date.now(), durationMs);
   if (review) {
     state.reviewEvents = [...(state.reviewEvents || []), review].slice(-LexoraLearning.MAX_PENDING);
     setTimeout(flushReviews, 0);
@@ -1503,8 +1514,9 @@ function applyAnswer(known) {
   learning.responses[learning.index] = { known, choice: learning.selectedChoice };
   learning.testAnswered = true;
   const word = currentWord();
+  const durationMs = Math.max(0, Date.now() - Number(learning.questionStartedAt || Date.now()));
   if (!known) queuePractice(word);
-  updateWordData(word, known);
+  updateWordData(word, known, durationMs);
   if (!learning.auto) {
     addRewards(known);
     state.daily.words += 1;
@@ -1518,6 +1530,7 @@ function nextLearningQuestion() {
   learning.revealed = false;
   learning.testAnswered = false;
   learning.selectedChoice = null;
+  learning.questionStartedAt = Date.now();
   if (learning.index >= learning.words.length) return finishLearning();
   renderLearning();
 }
